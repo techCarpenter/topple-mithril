@@ -1,0 +1,21 @@
+{
+  "name": "topple",
+  "type": "module",
+  "description": "",
+  "repository": "",
+  "author": "Brian DeVries",
+  "source": "index.html",
+  "license": "MIT",
+  "scripts": {
+    "dev": "parcel --no-cache",
+    "build": "parcel build"
+  },
+  "dependencies": {
+    "mithril": "^2.2.2",
+    "plotly.js-basic-dist-min": "^2.35.2"
+  },
+  "devDependencies": {
+    "@types/mithril": "^2.2.7",
+    "parcel": "^2.12.0"
+  }
+}
