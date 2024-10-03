@@ -8,6 +8,10 @@
  * @property {number} apr
  * @property {number} minPayment
  *
+ * @typedef BalanceDetail
+ * @property {string} loanID
+ * @property {number} balance
+ * 
  * @typedef PaymentDetail
  * @property {string} loanID
  * @property {number} balance
@@ -18,6 +22,10 @@
  * @typedef PayPeriodDetail
  * @property {Date} date
  * @property {PaymentDetail[]} payments
+ * 
+ * @typedef SnapshotDetail
+ * @property {Date} date
+ * @property {BalanceDetail[]} balances
  *
  * @typedef AccountPayoffDetail
  * @property {string} id
@@ -67,5 +75,6 @@
  * @property {number} snowball
  * @property {PaydownDataDetail} paydownData
  * @property {Loan[]} accounts
+ * @property {SnapshotDetail[]} historicBalanceArray
  */
 export { }
