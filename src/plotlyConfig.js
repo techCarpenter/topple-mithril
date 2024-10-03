@@ -68,14 +68,16 @@ const CreateTrace = ({
   y = [],
   mode = "lines",
   type = "scatter",
-  line = { shape: "spline", smoothing: 0.6, width: 2 }
+  line = { shape: "spline", smoothing: 0.6, width: 2 },
+  connectgaps = true
 } = {}) => ({
   name,
   x,
   y,
   mode,
   type,
-  line
+  line,
+  connectgaps
 });
 
 const plotlyConfig = {
