@@ -12,11 +12,5 @@ const account = {
   minPayment: 82.34,
   dateOpened: new Date("2024-04-01"),
   paidOffDate: null,
-  balanceHistory: [
-    {
-      date: new Date("2024-04-01"),
-      balance: 6676.12
-    }
-  ]
 }
 ```

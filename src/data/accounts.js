@@ -9,7 +9,8 @@ const accounts = [
     balance: 5351.71,
     apr: 5.74,
     minPayment: 166.43,
-    dateOpened: new Date("2024-08-01T00:00:00")
+    dateOpened: new Date("2024-08-01T00:00:00"),
+    lastSnapshot: null
   },
   {
     id: "002",
@@ -18,7 +19,8 @@ const accounts = [
     balance: 12161.54,
     apr: 5.24,
     minPayment: 162.46,
-    dateOpened: new Date("2024-08-01T00:00:00")
+    dateOpened: new Date("2024-08-01T00:00:00"),
+    lastSnapshot: null
   },
   {
     id: "003",
@@ -27,7 +29,8 @@ const accounts = [
     balance: 3269.19,
     apr: 3.61,
     minPayment: 17.98,
-    dateOpened: new Date("2024-04-01T00:00:00")
+    dateOpened: new Date("2024-04-01T00:00:00"),
+    lastSnapshot: null
   },
   {
     id: "004",
@@ -36,7 +39,8 @@ const accounts = [
     balance: 2098.22,
     apr: 3.61,
     minPayment: 11.54,
-    dateOpened: new Date("2024-05-01T00:00:00")
+    dateOpened: new Date("2024-05-01T00:00:00"),
+    lastSnapshot: null
   },
   {
     id: "005",
@@ -45,7 +49,8 @@ const accounts = [
     balance: 3510.96,
     apr: 4.41,
     minPayment: 24.65,
-    dateOpened: new Date("2024-04-01T00:00:00")
+    dateOpened: new Date("2024-04-01T00:00:00"),
+    lastSnapshot: null
   },
   {
     id: "006",
@@ -54,7 +59,8 @@ const accounts = [
     balance: 1770.68,
     apr: 4.41,
     minPayment: 12.44,
-    dateOpened: new Date("2024-04-01T00:00:00")
+    dateOpened: new Date("2024-04-01T00:00:00"),
+    lastSnapshot: null
   },
   {
     id: "007",
@@ -63,7 +69,8 @@ const accounts = [
     balance: 5064.23,
     apr: 4.04,
     minPayment: 29,
-    dateOpened: new Date("2024-04-01T00:00:00")
+    dateOpened: new Date("2024-04-01T00:00:00"),
+    lastSnapshot: null
   },
   {
     id: "008",
@@ -72,7 +79,8 @@ const accounts = [
     balance: 6987.9,
     apr: 4.04,
     minPayment: 40.01,
-    dateOpened: new Date("2024-04-01T00:00:00")
+    dateOpened: new Date("2024-04-01T00:00:00"),
+    lastSnapshot: null
   },
   {
     id: "009",
@@ -81,7 +89,8 @@ const accounts = [
     balance: 5033.02,
     apr: 3.51,
     minPayment: 27.41,
-    dateOpened: new Date("2024-04-01T00:00:00")
+    dateOpened: new Date("2024-04-01T00:00:00"),
+    lastSnapshot: null
   },
   {
     id: "010",
@@ -90,7 +99,8 @@ const accounts = [
     balance: 6635.73,
     apr: 3.51,
     minPayment: 36.14,
-    dateOpened: new Date("2024-04-01T00:00:00")
+    dateOpened: new Date("2024-04-01T00:00:00"),
+    lastSnapshot: null
   },
   {
     id: "011",
@@ -99,7 +109,8 @@ const accounts = [
     balance: 3251.51,
     apr: 3.86,
     minPayment: 40.24,
-    dateOpened: new Date("2024-04-01T00:00:00")
+    dateOpened: new Date("2024-04-01T00:00:00"),
+    lastSnapshot: null
   },
   {
     id: "012",
@@ -108,7 +119,8 @@ const accounts = [
     balance: 3940.87,
     apr: 4.66,
     minPayment: 50.03,
-    dateOpened: new Date("2024-04-01T00:00:00")
+    dateOpened: new Date("2024-04-01T00:00:00"),
+    lastSnapshot: null
   },
   {
     id: "013",
@@ -117,7 +129,8 @@ const accounts = [
     balance: 1001.19,
     apr: 4.66,
     minPayment: 12.81,
-    dateOpened: new Date("2024-04-01T00:00:00")
+    dateOpened: new Date("2024-04-01T00:00:00"),
+    lastSnapshot: null
   },
   {
     id: "014",
@@ -126,7 +139,8 @@ const accounts = [
     balance: 5028.15,
     apr: 4.29,
     minPayment: 63.07,
-    dateOpened: new Date("2024-04-01T00:00:00")
+    dateOpened: new Date("2024-04-01T00:00:00"),
+    lastSnapshot: null
   },
   {
     id: "015",
@@ -135,7 +149,8 @@ const accounts = [
     balance: 5010.41,
     apr: 3.76,
     minPayment: 61.8,
-    dateOpened: new Date("2024-04-01T00:00:00")
+    dateOpened: new Date("2024-04-01T00:00:00"),
+    lastSnapshot: null
   },
   {
     id: "016",
@@ -144,7 +159,8 @@ const accounts = [
     balance: 6676.12,
     apr: 3.76,
     minPayment: 82.34,
-    dateOpened: new Date("2024-04-01T00:00:00")
+    dateOpened: new Date("2024-04-01T00:00:00"),
+    lastSnapshot: null
   },
   // {
   //   id: "017",
@@ -355,87 +371,90 @@ const extraPayments = [
   // }
 ];
 
+/**
+ * @type {types.SnapshotDetail[]}
+ */
 const snapshots = [
   {
     date: new Date("2024-08-01T00:00:00"),
     balances: [
       {
-        id: "001",
+        loanID: "001",
         name: "0129",
         balance: 5351.71,
       },
       {
-        id: "002",
+        loanID: "002",
         name: "0127",
         balance: 12161.54,
       },
       {
-        id: "003",
+        loanID: "003",
         name: "B-A",
         balance: 3269.19,
       },
       {
-        id: "004",
+        loanID: "004",
         name: "B-B",
         balance: 2098.22,
       },
       {
-        id: "005",
+        loanID: "005",
         name: "B-C",
         balance: 3510.96,
       },
       {
-        id: "006",
+        loanID: "006",
         name: "B-D",
         balance: 1770.68,
       },
       {
-        id: "007",
+        loanID: "007",
         name: "B-E",
         balance: 5064.23,
       },
       {
-        id: "008",
+        loanID: "008",
         name: "B-F",
         balance: 6987.9,
       },
       {
-        id: "009",
+        loanID: "009",
         name: "B-G",
         balance: 5033.02,
       },
       {
-        id: "010",
+        loanID: "010",
         name: "B-H",
         balance: 6635.73,
       },
       {
-        id: "011",
+        loanID: "011",
         name: "H-A",
         balance: 3251.51,
       },
       {
-        id: "012",
+        loanID: "012",
         name: "H-B",
         balance: 3940.87,
       },
       {
-        id: "013",
+        loanID: "013",
         name: "H-C",
         balance: 1001.19,
       },
       {
-        id: "014",
+        loanID: "014",
         name: "H-D",
         balance: 5028.15,
       },
       {
-        id: "015",
+        loanID: "015",
         name: "H-E",
         balance: 5010.41,
       },
       {
-        id: "016",
+        loanID: "016",
         name: "H-F",
         balance: 6676.12,
       },
@@ -445,12 +464,12 @@ const snapshots = [
     date: new Date("2019-05-01T00:00:00"),
     balances: [
       {
-        id: "001",
+        loanID: "001",
         name: "0129",
         balance: 18801,
       },
       {
-        id: "002",
+        loanID: "002",
         name: "0127",
         balance: 18214,
       }
@@ -460,52 +479,52 @@ const snapshots = [
     date: new Date("2017-11-01T00:00:00"),
     balances: [
       {
-        id: "001",
+        loanID: "001",
         name: "0129",
         balance: 19993,
       },
       {
-        id: "002",
+        loanID: "002",
         name: "0127",
         balance: 19636,
       },
       {
-        id: "003",
+        loanID: "003",
         name: "B-A",
         balance: 3500,
       },
       {
-        id: "004",
+        loanID: "004",
         name: "B-B",
         balance: 2289,
       },
       {
-        id: "005",
+        loanID: "005",
         name: "B-C",
         balance: 4500,
       },
       {
-        id: "006",
+        loanID: "006",
         name: "B-D",
         balance: 2257,
       },
       {
-        id: "007",
+        loanID: "007",
         name: "B-E",
         balance: 5500,
       },
       {
-        id: "008",
+        loanID: "008",
         name: "B-F",
         balance: 7511,
       },
       {
-        id: "009",
+        loanID: "009",
         name: "B-G",
         balance: 5500,
       },
       {
-        id: "010",
+        loanID: "010",
         name: "B-H",
         balance: 7186,
       }
@@ -515,46 +534,48 @@ const snapshots = [
     date: new Date("2018-06-01T00:00:00"),
     balances: [
       {
-        id: "011",
+        loanID: "011",
         name: "H-A",
         balance: 3251.51,
       },
       {
-        id: "012",
+        loanID: "012",
         name: "H-B",
         balance: 3940.87,
       },
       {
-        id: "013",
+        loanID: "013",
         name: "H-C",
         balance: 1001.19,
       },
       {
-        id: "014",
+        loanID: "014",
         name: "H-D",
         balance: 5028.15,
       },
       {
-        id: "015",
+        loanID: "015",
         name: "H-E",
         balance: 5010.41,
       },
       {
-        id: "016",
+        loanID: "016",
         name: "H-F",
         balance: 6676.12,
       }
     ]
-  }].reduce((/** @type {Array} */ acc, cur) => {
+  }]
+  .reduce((/** @type {types.SnapshotDetail[]} */ acc, cur) => {
     let updatedBalances = cur.balances.map(balance => {
       return {
-        id: balance.id,
-        date: balance.date,
+        loanID: balance.loanID,
         balance: balance.balance,
-        name: balance.name
       };
     })
-    acc.push(...updatedBalances);
+    acc.push({
+      date: cur.date,
+      balances: [...updatedBalances]
+    });
     return acc;
   }, []);
 
@@ -568,5 +589,6 @@ const snowballChanges = [
 export {
   accounts,
   extraPayments,
+  snapshots,
   snowballChanges
 }

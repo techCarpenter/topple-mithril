@@ -1,5 +1,5 @@
 import m from "mithril";
-import { getPaidToCurrent, percentFormat, currencyFormat, currentBalance, dateFormat, getTotalPaymentData, PAYDOWN_METHODS } from "../paydownData";
+import { getPaidToCurrent, percentFormat, currencyFormat, currentBalance, dateFormat, getFuturePaydownData, PAYDOWN_METHODS } from "../paydownData";
 import { state, actions } from "../state";
 
 let infoItems = [];
@@ -15,7 +15,7 @@ function updateInfo() {
     },
     {
       title: "Total Saved",
-      value: currencyFormat(getTotalPaymentData(state.accounts, PAYDOWN_METHODS.minPayments, 0).totalPaid - state.paydownData.totalPaid)
+      value: currencyFormat(getFuturePaydownData(state.accounts, PAYDOWN_METHODS.minPayments, 0).totalPaid - state.paydownData.totalPaid)
     },
     {
       title: "Current Balance",

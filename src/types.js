@@ -7,6 +7,7 @@
  * @property {string} provider
  * @property {number} apr
  * @property {number} minPayment
+ * @property {Date|null} lastSnapshot
  *
  * @typedef BalanceDetail
  * @property {string} loanID
@@ -76,5 +77,6 @@
  * @property {PaydownDataDetail} paydownData
  * @property {Loan[]} accounts
  * @property {SnapshotDetail[]} historicBalanceArray
+ * @property {SnapshotDetail[]} balanceSnapshots
  */
 export { }

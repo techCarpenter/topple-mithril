@@ -49,7 +49,7 @@ function getMonthString(monthInt) {
  * @param {types.ExtraPayment[]} oneTimePayments Extra one-off payments
  * @returns {types.PaydownDataDetail} An array of payment details with the date and an array of payments
  */
-function getTotalPaymentData(
+function getFuturePaydownData(
   loans,
   paydownMethod = PAYDOWN_METHODS.snowball,
   initSnowball = 0,
@@ -57,12 +57,12 @@ function getTotalPaymentData(
 ) {
   let /** @type {types.AccountPayoffDetail[]}*/ accountPayoffOrder = [],
     /** @type {types.PayPeriodDetail[]} */ allPaymentData = [],
-    snowballAmt = initSnowball,
+    snowballAmt = 0,
     /** @type {types.Loan[]} */ loansCopy = copy(loans),
     startDate = loansCopy.map(loan => loan.dateOpened).sort(dateSortAsc)[0],
     curYear = startDate.getFullYear(),
     curMonth = startDate.getMonth(),
-    /** @type {number} */ monthsLeft = 0,
+    monthsLeft = 0,
     nowMonth = new Date().getMonth(),
     nowYear = new Date().getFullYear();
 
@@ -70,6 +70,9 @@ function getTotalPaymentData(
 
   // Loop over each payment period
   do {
+    if (curYear === nowYear && curMonth === nowMonth) {
+      snowballAmt += initSnowball
+    }
     if (curYear > nowYear || (curYear === nowYear && curMonth >= nowMonth)) {
       monthsLeft++;
     }
@@ -136,6 +139,35 @@ function getTotalPaymentData(
   };
 
   return returnObj;
+}
+
+/**
+ * 
+ * @param {types.SnapshotDetail[]} balanceSnapshots
+ * @returns {types.SnapshotDetail[]}
+ */
+function getHistoricBalanceData(balanceSnapshots) {
+  let /** @type {types.SnapshotDetail[]} */ snapshotsCopy = copy(balanceSnapshots),
+    startDate = snapshotsCopy.map(snap => snap.date).sort(dateSortAsc)[0],
+    curYear = startDate.getFullYear(),
+    curMonth = startDate.getMonth(),
+    lastSnapshotTime = Math.max(...snapshotsCopy.map(a => a.date.getTime())),
+    lastSnapshotMonth = new Date(lastSnapshotTime).getMonth(),
+    lastSnapshotYear = new Date(lastSnapshotTime).getFullYear(),
+    balanceArray = [],
+    curSnapshot = null;
+
+  do {
+    curSnapshot = snapshotsCopy.find(snap => snap.date.getMonth() === curMonth && snap.date.getFullYear() === curYear)
+    balanceArray.push(curSnapshot ?? {
+      date: new Date(curYear, curMonth, 1),
+      balances: []
+    });
+
+    // Calculate Next Payment Period
+    ({ curMonth, curYear } = getNextMonthYear(curMonth, curYear));
+  } while (new Date(curYear, curMonth, 1) <= new Date(lastSnapshotYear, lastSnapshotMonth, 1))
+  return balanceArray;
 }
 
 /**
@@ -347,11 +379,11 @@ function getNextPayments(loans, curMonth, curYear) {
         (curMonthInterest + curMonthPrincipal).toFixed(2)
       );
       loan.balance = futureBalance;
+      paymentObj.payments.push(paymentDetails);
     } else {
       //prevent adding empty payment details to payments
       continue;
     }
-    paymentObj.payments.push(paymentDetails);
   }
   return { loans, extraPayment, paymentObj };
 }
@@ -570,10 +602,11 @@ export {
   percentFormat,
   dateSortAsc,
   prioritizeLoans,
-  getTotalPaymentData,
+  getFuturePaydownData,
   getMonthString,
   copy,
   getPaidToCurrent,
   paymentsBeforeToday,
-  currentBalance
+  currentBalance,
+  getHistoricBalanceData
 };
