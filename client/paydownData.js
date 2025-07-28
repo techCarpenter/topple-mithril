@@ -593,6 +593,40 @@ function getPaidToCurrent(paydownData) {
   }
 };
 
+function getChartData(accounts, historicBalanceArray, paymentArray) {
+  let xData = [...historicBalanceArray.map(x => x.date).slice(0, -1), ...paymentArray.map(x => x.date)];
+  let yData = [];
+
+  for (let i = 0; i < accounts.length; i++) {
+    let historicYData = historicBalanceArray.slice(0, -1).map(
+      balancePeriod => {
+        let balanceInfo = balancePeriod.balances.filter(
+          bal => bal.loanID === accounts[i].id);
+        if (balanceInfo.length > 0) {
+          return balanceInfo[0].balance;
+        } else {
+          return null;
+        }
+      }
+    ),
+      projectedYData = paymentArray.map(
+        payPeriod => {
+          let paymentInfo = payPeriod.payments.filter(
+            payment =>
+              payment.loanID === accounts[i].id
+          );
+          if (paymentInfo.length > 0) {
+            return paymentInfo[0].balance;
+          } else {
+            return null;
+          }
+        }
+      );
+    yData = [...yData, [...historicYData, ...projectedYData]];
+  }
+  return { xData, yData }
+}
+
 export {
   PAYDOWN_METHODS,
   dateFormat,
@@ -608,5 +642,6 @@ export {
   getPaidToCurrent,
   paymentsBeforeToday,
   currentBalance,
-  getHistoricBalanceData
+  getHistoricBalanceData,
+  getChartData
 };
