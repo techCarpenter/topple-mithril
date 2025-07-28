@@ -79,4 +79,4 @@
  * @property {SnapshotDetail[]} historicBalanceArray
  * @property {SnapshotDetail[]} balanceSnapshots
  */
-export { }
+export default {}
