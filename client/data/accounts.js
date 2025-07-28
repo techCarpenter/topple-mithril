@@ -4,8 +4,8 @@
 const accounts = [
   {
     id: "001",
-    name: "0129",
-    provider: "Discover",
+    name: "3845372",
+    provider: "Firstmark",
     balance: 5351.71,
     apr: 5.74,
     minPayment: 166.43,
@@ -14,8 +14,8 @@ const accounts = [
   },
   {
     id: "002",
-    name: "0127",
-    provider: "Discover",
+    name: "3845371",
+    provider: "Firstmark",
     balance: 12161.54,
     apr: 5.24,
     minPayment: 162.46,
@@ -161,179 +161,8 @@ const accounts = [
     minPayment: 82.34,
     dateOpened: new Date("2024-04-01T00:00:00"),
     lastSnapshot: null
-  },
-  // {
-  //   id: "017",
-  //   name: "Mortgage",
-  //   provider: "Mr. Cooper",
-  //   balance: 236901.36,
-  //   apr: 6.5,
-  //   minPayment: 1531.18,
-  //   dateOpened: new Date("2024-09-01T00:00:00")
-  // }
+  }
 ];
-// const accounts = [
-//   {
-//     id: "001",
-//     name: "0129",
-//     provider: "Discover",
-//     balance: 0,
-//     apr: 5.74,
-//     minPayment: 166.43,
-//     dateOpened: new Date("2024-08-01T00:00:00"),
-//     lastSnapshot: null
-//   },
-//   {
-//     id: "002",
-//     name: "0127",
-//     provider: "Discover",
-//     balance: 0,
-//     apr: 5.24,
-//     minPayment: 162.46,
-//     dateOpened: new Date("2024-08-01T00:00:00"),
-//     lastSnapshot: null
-//   },
-//   {
-//     id: "003",
-//     name: "B-A",
-//     provider: "Nelnet",
-//     balance: 0,
-//     apr: 3.61,
-//     minPayment: 17.98,
-//     dateOpened: new Date("2024-04-01T00:00:00"),
-//     lastSnapshot: null
-//   },
-//   {
-//     id: "004",
-//     name: "B-B",
-//     provider: "Nelnet",
-//     balance: 0,
-//     apr: 3.61,
-//     minPayment: 11.54,
-//     dateOpened: new Date("2024-05-01T00:00:00"),
-//     lastSnapshot: null
-//   },
-//   {
-//     id: "005",
-//     name: "B-C",
-//     provider: "Nelnet",
-//     balance: 0,
-//     apr: 4.41,
-//     minPayment: 24.65,
-//     dateOpened: new Date("2024-04-01T00:00:00"),
-//     lastSnapshot: null
-//   },
-//   {
-//     id: "006",
-//     name: "B-D",
-//     provider: "Nelnet",
-//     balance: 0,
-//     apr: 4.41,
-//     minPayment: 12.44,
-//     dateOpened: new Date("2024-04-01T00:00:00"),
-//     lastSnapshot: null
-//   },
-//   {
-//     id: "007",
-//     name: "B-E",
-//     provider: "Nelnet",
-//     balance: 0,
-//     apr: 4.04,
-//     minPayment: 29,
-//     dateOpened: new Date("2024-04-01T00:00:00"),
-//     lastSnapshot: null
-//   },
-//   {
-//     id: "008",
-//     name: "B-F",
-//     provider: "Nelnet",
-//     balance: 0,
-//     apr: 4.04,
-//     minPayment: 40.01,
-//     dateOpened: new Date("2024-04-01T00:00:00"),
-//     lastSnapshot: null
-//   },
-//   {
-//     id: "009",
-//     name: "B-G",
-//     provider: "Nelnet",
-//     balance: 0,
-//     apr: 3.51,
-//     minPayment: 27.41,
-//     dateOpened: new Date("2024-04-01T00:00:00"),
-//     lastSnapshot: null
-//   },
-//   {
-//     id: "010",
-//     name: "B-H",
-//     provider: "Nelnet",
-//     balance: 0,
-//     apr: 3.51,
-//     minPayment: 36.14,
-//     dateOpened: new Date("2024-04-01T00:00:00"),
-//     lastSnapshot: null
-//   },
-//   {
-//     id: "011",
-//     name: "H-A",
-//     provider: "Nelnet",
-//     balance: 0,
-//     apr: 3.86,
-//     minPayment: 40.24,
-//     dateOpened: new Date("2024-04-01T00:00:00"),
-//     lastSnapshot: null
-//   },
-//   {
-//     id: "012",
-//     name: "H-B",
-//     provider: "Nelnet",
-//     balance: 0,
-//     apr: 4.66,
-//     minPayment: 50.03,
-//     dateOpened: new Date("2024-04-01T00:00:00"),
-//     lastSnapshot: null
-//   },
-//   {
-//     id: "013",
-//     name: "H-C",
-//     provider: "Nelnet",
-//     balance: 0,
-//     apr: 4.66,
-//     minPayment: 12.81,
-//     dateOpened: new Date("2024-04-01T00:00:00"),
-//     lastSnapshot: null
-//   },
-//   {
-//     id: "014",
-//     name: "H-D",
-//     provider: "Nelnet",
-//     balance: 0,
-//     apr: 4.29,
-//     minPayment: 63.07,
-//     dateOpened: new Date("2024-04-01T00:00:00"),
-//     lastSnapshot: null
-//   },
-//   {
-//     id: "015",
-//     name: "H-E",
-//     provider: "Nelnet",
-//     balance: 0,
-//     apr: 3.76,
-//     minPayment: 61.8,
-//     dateOpened: new Date("2024-04-01T00:00:00"),
-//     lastSnapshot: null
-//   },
-//   {
-//     id: "016",
-//     name: "H-F",
-//     provider: "Nelnet",
-//     balance: 0,
-//     apr: 3.76,
-//     minPayment: 82.34,
-//     dateOpened: new Date("2024-04-01T00:00:00"),
-//     lastSnapshot: null
-//   }
-// ];
 
 /** @type {types.ExtraPayment[]} */
 const extraPayments = [
@@ -376,16 +205,126 @@ const extraPayments = [
  */
 const snapshots = [
   {
+    date: new Date("2025-06-01T00:00:00"),
+    balances: [
+      {
+        loanID: "001",
+        name: "3845372",
+        balance: 3840.9,
+      },
+      {
+        loanID: "002",
+        name: "3845351",
+        balance: 11104.98,
+      },
+      {
+        loanID: "003",
+        name: "B-A",
+        balance: 3159.23,
+      },
+      {
+        loanID: "004",
+        name: "B-B",
+        balance: 2027.64,
+      },
+      {
+        loanID: "005",
+        name: "B-C",
+        balance: 3350.64,
+      },
+      {
+        loanID: "006",
+        name: "B-D",
+        balance: 1689.70,
+      },
+      {
+        loanID: "007",
+        name: "B-E",
+        balance: 4904.18,
+      },
+      {
+        loanID: "008",
+        name: "B-F",
+        balance: 6767.15,
+      },
+      {
+        loanID: "009",
+        name: "B-G",
+        balance: 4861.44,
+      },
+      {
+        loanID: "010",
+        name: "B-H",
+        balance: 6409.48,
+      },
+      {
+        loanID: "011",
+        name: "H-A",
+        balance: 3091.87,
+      },
+      {
+        loanID: "012",
+        name: "H-B",
+        balance: 3787.7,
+      },
+      {
+        loanID: "013",
+        name: "H-C",
+        balance: 962.24,
+      },
+      {
+        loanID: "014",
+        name: "H-D",
+        balance: 4808.91,
+      },
+      {
+        loanID: "015",
+        name: "H-E",
+        balance: 4758.23,
+      },
+      {
+        loanID: "016",
+        name: "H-F",
+        balance: 6340.01,
+      },
+    ]
+  },
+  {
+    date: new Date("2025-03-01T00:00:00"),
+    balances: [
+      {
+        loanID: "001",
+        name: "3845372",
+        balance: 4297.95,
+      }
+    ]
+  },
+  {
+    date: new Date("2025-01-01T00:00:00"),
+    balances: [
+      {
+        loanID: "001",
+        name: "3845372",
+        balance: 4764.04,
+      },
+      {
+        loanID: "002",
+        name: "3845371",
+        balance: 11679.18,
+      }
+    ]
+  },
+  {
     date: new Date("2024-08-01T00:00:00"),
     balances: [
       {
         loanID: "001",
-        name: "0129",
+        name: "3845372",
         balance: 5351.71,
       },
       {
         loanID: "002",
-        name: "0127",
+        name: "3845371",
         balance: 12161.54,
       },
       {
@@ -458,6 +397,11 @@ const snapshots = [
         name: "H-F",
         balance: 6676.12,
       },
+      // {
+      //   loanID: "017",
+      //   name: "Mortgage",
+      //   balance: 236901.36,
+      // },
     ]
   },
   {
@@ -465,12 +409,12 @@ const snapshots = [
     balances: [
       {
         loanID: "001",
-        name: "0129",
+        name: "3845372",
         balance: 18801,
       },
       {
         loanID: "002",
-        name: "0127",
+        name: "3845371",
         balance: 18214,
       }
     ]
@@ -480,12 +424,12 @@ const snapshots = [
     balances: [
       {
         loanID: "001",
-        name: "0129",
+        name: "3845372",
         balance: 19993,
       },
       {
         loanID: "002",
-        name: "0127",
+        name: "3845371",
         balance: 19636,
       },
       {
@@ -580,10 +524,10 @@ const snapshots = [
   }, []);
 
 const snowballChanges = [
-  {
-    date: new Date("2024-12-01"),
-    amount: 2000
-  }
+  // {
+  //   date: new Date("2025-04-01"),
+  //   amount: 200
+  // }
 ]
 
 export {
