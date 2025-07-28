@@ -1,12 +1,15 @@
 import m from "mithril";
-import { getPaidToCurrent, percentFormat, currencyFormat, currentBalance, dateFormat, getFuturePaydownData, PAYDOWN_METHODS } from "../paydownData";
+import { percentFormat, currencyFormat, currentBalance, dateFormat } from "../paydownData";
 import { state, actions } from "../state";
 
 let infoItems = [];
 
 function updateInfo() {
-  let paidAmt = getPaidToCurrent(state.paydownData);
-  let progress = ((paidAmt / state.paydownData.totalPaid) * 100);
+  // let paidAmt = getPaidToCurrent(state.paydownData);
+
+  let startingAmount = state.balanceSnapshots.map(snap => snap.balances).flat().reduce((acc, cur) => { acc[cur.loanID] = Math.max(acc[cur.loanID] ?? 0, cur.balance); return acc; }, {});
+  let maxBalance = Object.values(startingAmount).reduce((acc, cur) => acc + cur);
+  let progress = (((maxBalance - currentBalance(state.paydownData)) / maxBalance) * 100);
 
   infoItems = [
     {
@@ -14,41 +17,42 @@ function updateInfo() {
       value: progress
     },
     {
-      title: "Total Saved",
-      value: currencyFormat(getFuturePaydownData(state.accounts, PAYDOWN_METHODS.minPayments, 0).totalPaid - state.paydownData.totalPaid)
+      title: "Starting Balance",
+      value: currencyFormat(maxBalance)
     },
     {
       title: "Current Balance",
       value: currencyFormat(currentBalance(state.paydownData))
     },
-    {
-      title: "Paid So Far",
-      value: currencyFormat(paidAmt)
-    },
-    {
-      title: "Starting Balance",
-      value: currencyFormat(state.accounts.map((acct) => acct.balance).reduce((acc, cur) => acc + cur))
-    },
-    {
-      title: "Time Remaining",
-      value: `${(state.paydownData.monthsLeft / 12).toFixed(2)} Years`
-    },
-    {
-      title: "Total Paid",
-      value: currencyFormat(state.paydownData.totalPaid)
-    },
+    // {
+    //   title: "Total Paid",
+    //   value: currencyFormat(state.paydownData.totalPaid)
+    // },
+    // {
+    //   title: "Total Interest",
+    //   value: currencyFormat(state.paydownData.totalInterestPaid)
+    // },
     {
       title: "Final Snowball",
       value: currencyFormat(state.paydownData.finalSnowball)
     },
     {
-      title: "Total Interest Paid",
-      value: currencyFormat(state.paydownData.totalInterestPaid)
+      title: "Time Remaining",
+      value: `${Math.floor(state.paydownData.monthsLeft / 12)} Years, ${(state.paydownData.monthsLeft % 12)} Months`
     },
     {
       title: "DEBT FREE",
       value: dateFormat(state.paydownData.endDate)
-    }];
+    },
+    // {
+    //   title: "Total Saved",
+    //   value: currencyFormat(getFuturePaydownData(state.accounts, PAYDOWN_METHODS.minPayments, 0).totalPaid - state.paydownData.totalPaid)
+    // },
+    // {
+    //   title: "Paid So Far",
+    //   value: currencyFormat(paidAmt)
+    // },
+  ];
 }
 
 /**
@@ -57,8 +61,8 @@ function updateInfo() {
 const PaydownInfo = {
   view: function () {
     return [
-      m("div", { style: { margin: "10px 0"}}, [
-        m("label", { for: "snowball" }, "Snowball: "),
+      m("div", { style: { margin: "10px 0" } }, [
+        m("label", { for: "snowball" }, "Extra Snowball: "),
         m("input#snowball", {
           type: "number", min: "0", step: "20", value: state.snowball, onchange: function (e) {
             e.preventDefault();
