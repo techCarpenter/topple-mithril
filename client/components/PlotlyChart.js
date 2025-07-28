@@ -20,6 +20,7 @@ function plotChartData() {
 }
 
 const updateChart = (accounts, chartConfig) => {
+  let updatedConfig = copy(chartConfig)
   if (accounts && accounts !== null && accounts.length > 0) {
     try {
       let xTrace = [...state.historicBalanceArray.map(x => x.date).slice(0, -1), ...state.paydownData.paymentArray.map(x => x.date)];
@@ -61,13 +62,13 @@ const updateChart = (accounts, chartConfig) => {
         );
       }
 
-      chartConfig.data = traces;
-      chartConfig.layout.datarevision = Date.now();
+      updatedConfig.data = traces;
+      updatedConfig.layout.datarevision = Date.now();
     } catch (err) {
       console.error("Error updating chart:", err);
     }
-    return chartConfig;
   }
+  return updatedConfig;
 };
 
 /**
