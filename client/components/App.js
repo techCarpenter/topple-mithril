@@ -1,12 +1,13 @@
 import m from "mithril"
-import { PlotlyChart } from "./PlotlyChart"
+import { PlotlyLineChart } from "./PlotlyChart"
+import { PlotlyBarChart } from "./PayoffBarChart"
 import { actions } from "../state"
 import { PaydownInfo } from "./PaydownInfo"
 
 /** @type {m.Component} */
 const App = {
   view: function () {
-    return [m(PlotlyChart), m(PaydownInfo)];
+    return [m(PlotlyLineChart), m("hr"), m(PaydownInfo), m("hr"), m(PlotlyBarChart)];
   },
   oninit: () => actions.fetchPaydownData(),
   onbeforeupdate: () => actions.fetchPaydownData()

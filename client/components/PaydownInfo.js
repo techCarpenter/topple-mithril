@@ -7,8 +7,8 @@ let infoItems = [];
 function updateInfo() {
   // let paidAmt = getPaidToCurrent(state.paydownData);
 
-  let startingAmount = state.balanceSnapshots.map(snap => snap.balances).flat().reduce((acc, cur) => { acc[cur.loanID] = Math.max(acc[cur.loanID] ?? 0, cur.balance); return acc; }, {});
-  let maxBalance = Object.values(startingAmount).reduce((acc, cur) => acc + cur);
+  let initialBalances = state.balanceSnapshots.map(snap => snap.balances).flat().reduce((acc, cur) => { acc[cur.loanID] = Math.max(acc[cur.loanID] ?? 0, cur.balance); return acc; }, {});
+  let maxBalance = Object.values(initialBalances).reduce((acc, cur) => acc + cur);
   let progress = (((maxBalance - currentBalance(state.paydownData)) / maxBalance) * 100);
 
   infoItems = [
@@ -46,7 +46,7 @@ function updateInfo() {
     },
     // {
     //   title: "Total Saved",
-    //   value: currencyFormat(getFuturePaydownData(state.accounts, PAYDOWN_METHODS.minPayments, 0).totalPaid - state.paydownData.totalPaid)
+    //   value: currencyFormat(calculatePaydownSchedule(state.accounts, PAYDOWN_METHODS.minPayments, 0).totalPaid - state.paydownData.totalPaid)
     // },
     // {
     //   title: "Paid So Far",

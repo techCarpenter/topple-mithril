@@ -1,7 +1,7 @@
 /** @import * as types from "../types" */
 
 import { accounts, extraPayments, snapshots } from "../data/accounts";
-import { getHistoricBalanceData, getFuturePaydownData, PAYDOWN_METHODS, dateSortAsc } from "../paydownData";
+import { getHistoricBalanceData, calculatePaydownSchedule, PAYDOWN_METHODS, dateSortAsc } from "../paydownData";
 
 /**
  * 
@@ -53,8 +53,8 @@ const Actions = (state) => ({
       state.accounts[i].balance = recentSnapshotDate.balance;
     }
 
-    state.paydownData = getFuturePaydownData(state.accounts, PAYDOWN_METHODS.snowball, state.snowball || 0, extraPayments);
-    console.log(state.paydownData.accountPayoffOrder.map(payoff => `${state.accounts.filter(acc => acc.id === payoff.id)[0].name} - ${payoff.payoffDate.toISOString()}`).join("\n"));
+    state.paydownData = calculatePaydownSchedule(state.accounts, PAYDOWN_METHODS.snowball, state.snowball || 0, extraPayments);
+    // console.log(state.paydownData.accountPayoffOrder.map(payoff => `${state.accounts.filter(acc => acc.id === payoff.id)[0].name} - ${payoff.payoffDate.toISOString()}`).join("\n"));
   },
   setSnowball: (value) => state.snowball = value
 });

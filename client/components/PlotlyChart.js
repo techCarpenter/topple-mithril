@@ -1,10 +1,10 @@
 import m from "mithril";
 import * as Plotly from "plotly.js-basic-dist-min";
-import { CreateTrace, plotlyConfig } from "../plotlyConfig";
-import { copy } from "../paydownData";
+import { CreateTrace, lineGraphConfig } from "../plotlyConfig";
+import { deepCopy } from "../paydownData";
 import { state } from "../state";
 
-let config = copy(plotlyConfig);
+let config = deepCopy(lineGraphConfig);
 
 function plotChartData() {
   let now = new Date();
@@ -20,7 +20,7 @@ function plotChartData() {
 }
 
 const updateChart = (accounts, chartConfig) => {
-  let updatedConfig = copy(chartConfig)
+  let updatedConfig = deepCopy(chartConfig)
   if (accounts && accounts !== null && accounts.length > 0) {
     try {
       let xTrace = [...state.historicBalanceArray.map(x => x.date).slice(0, -1), ...state.paydownData.paymentArray.map(x => x.date)];
@@ -74,7 +74,7 @@ const updateChart = (accounts, chartConfig) => {
 /**
  * @type {m.Component}
  */
-const PlotlyChart = {
+const PlotlyLineChart = {
   view: () => {
     return m("div#plotly-chart")
   },
@@ -82,4 +82,4 @@ const PlotlyChart = {
   onupdate: () => plotChartData()
 }
 
-export { PlotlyChart }
+export { PlotlyLineChart }

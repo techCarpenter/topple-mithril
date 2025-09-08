@@ -11,7 +11,7 @@ const CONFIG = {
 /** @type {Partial<Plotly.Layout>} */
 const LAYOUT = {
   xaxis: {
-    title: { text: "Time" },
+    title: { text: "Account" },
     color: "#f8f8f8"
   },
   yaxis: {
@@ -19,24 +19,8 @@ const LAYOUT = {
     color: "#f8f8f8",
     showline: true
   },
-  height: 450,
-  shapes: [
-    {
-      type: "line",
-      x0: null,
-      y0: 0,
-      x1: null,
-      yref: "paper",
-      y1: 1,
-      line: {
-        color: "#ff4646cc",
-        width: 1.5
-      }
-    }
-  ],
   font: {
     family: "Arial",
-    // size: 14,
     color: "#f8f8f8"
   },
   legend: {
@@ -54,7 +38,8 @@ const LAYOUT = {
   },
   paper_bgcolor: "#222222",
   plot_bgcolor: "#222222",
-  datarevision: 0
+  datarevision: 0,
+  barmode: "stack"
 };
 
 /**
@@ -62,29 +47,39 @@ const LAYOUT = {
  * @param {*} param0 
  * @returns {Plotly.Data}
  */
-const CreateTrace = ({
+const CreateBarTrace = ({
   name = "",
   x = [],
   y = [],
-  mode = "lines",
-  type = "scatter",
-  line = { shape: "spline", smoothing: 0.1, width: 2 },
-  connectgaps = true
+  type = "bar",
+  color = "",
+  text = "",
+  width = 0.9,
+  usePattern = false,
 } = {}) => ({
   name,
   x,
   y,
-  mode,
   type,
-  line,
-  connectgaps
+  marker: {
+    color: color,
+    pattern: usePattern ? {
+      shape: "/",
+      bgcolor: color,
+      fgcolor: "#222222",
+      fillmode: "replace",
+      size: 5
+    } : undefined
+  },
+  text,
+  width
 });
 
-const lineGraphConfig = {
+const barChartConfig = {
   /** @type {Plotly.Data[]} */
   data: [],
   layout: LAYOUT,
   config: CONFIG
 };
 
-export { lineGraphConfig, CreateTrace };
+export { barChartConfig, CreateBarTrace };

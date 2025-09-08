@@ -205,7 +205,92 @@ const extraPayments = [
  */
 const snapshots = [
   {
-    date: new Date("2025-06-01T00:00:00"),
+    date: new Date("2025-09-01T00:00:00"),
+    balances: [
+      {
+        loanID: "001",
+        name: "3845372",
+        balance: 3514,
+      },
+      {
+        loanID: "002",
+        name: "3845351",
+        balance: 10878,
+      },
+      {
+        loanID: "003",
+        name: "B-A",
+        balance: 3133,
+      },
+      {
+        loanID: "004",
+        name: "B-B",
+        balance: 2011,
+      },
+      {
+        loanID: "005",
+        name: "B-C",
+        balance: 3314,
+      },
+      {
+        loanID: "006",
+        name: "B-D",
+        balance: 1671,
+      },
+      {
+        loanID: "007",
+        name: "B-E",
+        balance: 4863,
+      },
+      {
+        loanID: "008",
+        name: "B-F",
+        balance: 6711,
+      },
+      {
+        loanID: "009",
+        name: "B-G",
+        balance: 4821,
+      },
+      {
+        loanID: "010",
+        name: "B-H",
+        balance: 6357,
+      },
+      {
+        loanID: "011",
+        name: "H-A",
+        balance: 3057,
+      },
+      {
+        loanID: "012",
+        name: "H-B",
+        balance: 3749,
+      },
+      {
+        loanID: "013",
+        name: "H-C",
+        balance: 952,
+      },
+      {
+        loanID: "014",
+        name: "H-D",
+        balance: 4758,
+      },
+      {
+        loanID: "015",
+        name: "H-E",
+        balance: 4705,
+      },
+      {
+        loanID: "016",
+        name: "H-F",
+        balance: 6269,
+      },
+    ]
+  },
+  {
+    date: new Date("2025-07-01T00:00:00"),
     balances: [
       {
         loanID: "001",
