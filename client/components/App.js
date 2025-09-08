@@ -1,5 +1,5 @@
 import m from "mithril"
-import { PlotlyLineChart } from "./PlotlyChart"
+import { PlotlyLineChart } from "./PaydownScatterPlot"
 import { PlotlyBarChart } from "./PayoffBarChart"
 import { actions } from "../state"
 import { PaydownInfo } from "./PaydownInfo"

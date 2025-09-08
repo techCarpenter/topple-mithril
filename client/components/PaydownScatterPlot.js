@@ -1,6 +1,6 @@
 import m from "mithril";
 import * as Plotly from "plotly.js-basic-dist-min";
-import { CreateTrace, lineGraphConfig } from "../plotlyConfig";
+import { CreateTrace, lineGraphConfig } from "../paydownScatterPlotConfig";
 import { deepCopy } from "../paydownData";
 import { state } from "../state";
 
