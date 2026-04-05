@@ -1,3 +1,5 @@
+/** @import * as types from "../types" */
+
 import m from "mithril";
 import * as Plotly from "plotly.js-basic-dist-min";
 import { CreateTrace, lineGraphConfig } from "../paydownScatterPlotConfig";
@@ -16,13 +18,22 @@ function plotChartData() {
   config.layout.datarevision = updatedChart.layout.datarevision;
   config.layout.height = 450;
 
+  console.log("updateChart", updatedChart);
+
   Plotly.react("plotly-chart", config.data, config.layout, config.config);
 }
 
+/**
+ * @param {types.Loan[]} accounts
+ * @param {Plotly.PlotlyDataLayoutConfig} chartConfig
+ */
 const updateChart = (accounts, chartConfig) => {
-  let updatedConfig = deepCopy(chartConfig)
+  console.log(accounts);
+  let updatedConfig = deepCopy(chartConfig);
   if (accounts && accounts !== null && accounts.length > 0) {
+
     try {
+      console.log("paymentArray: ", state.paydownData.paymentArray);
       let xTrace = [...state.historicBalanceArray.map(x => x.date).slice(0, -1), ...state.paydownData.paymentArray.map(x => x.date)];
       let traces = [],
         yTrace = [];
@@ -53,6 +64,7 @@ const updateChart = (accounts, chartConfig) => {
             }
           );
         yTrace = [...historicYData, ...projectedYData];
+        console.log("yTrace", yTrace);
         traces.push(
           CreateTrace({
             y: yTrace,
@@ -61,6 +73,8 @@ const updateChart = (accounts, chartConfig) => {
           })
         );
       }
+
+      console.log("traces: ", traces);
 
       updatedConfig.data = traces;
       updatedConfig.layout.datarevision = Date.now();

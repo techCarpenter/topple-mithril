@@ -9,8 +9,9 @@ const App = {
   view: function () {
     return [m(PlotlyLineChart), m("hr"), m(PaydownInfo), m("hr"), m(PlotlyBarChart)];
   },
-  oninit: () => actions.fetchPaydownData(),
-  onbeforeupdate: () => actions.fetchPaydownData()
+  oninit: () => {
+    void actions.initialize();
+  }
 }
 
 export { App }

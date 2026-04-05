@@ -16,7 +16,7 @@ const db = new Database(DB_FILE_PATH, {
 //WAL mode for improved performance
 db.pragma('journal_mode = WAL');
 
-readFile(SCHEMA_FILE_PATH)
+await readFile(SCHEMA_FILE_PATH)
   .then(file => db.exec(file.toString()))
   .catch(err => console.error(err));
 

@@ -80,6 +80,7 @@ const CreateTrace = ({
   connectgaps
 });
 
+/** @type {Plotly.PlotlyDataLayoutConfig} */
 const lineGraphConfig = {
   /** @type {Plotly.Data[]} */
   data: [],

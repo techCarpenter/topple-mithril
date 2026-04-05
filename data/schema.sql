@@ -12,13 +12,13 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 
-CREATE TABLE IF NOT EXISTS loans (
+CREATE TABLE IF NOT EXISTS accounts (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL,
   name TEXT NOT NULL,
+  provider TEXT,
   apr REAL NOT NULL,
   min_payment REAL NOT NULL,
-  is_closed INTEGER,
   FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
@@ -26,13 +26,32 @@ CREATE TABLE IF NOT EXISTS loans (
 CREATE TABLE IF NOT EXISTS snapshots (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL,
-  loan_id INTEGER NOT NULL,
+  account_id INTEGER NOT NULL,
   date INTEGER NOT NULL,
   balance REAL NOT NULL,
   FOREIGN KEY (user_id) REFERENCES users(id),
-  FOREIGN KEY (loan_id) REFERENCES loans(id)
+  FOREIGN KEY (account_id) REFERENCES accounts(id)
 );
 
+CREATE TABLE IF NOT EXISTS extrapayments (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  account_id INTEGER NOT NULL,
+  date INTEGER NOT NULL,
+  balance REAL NOT NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id),
+  FOREIGN KEY (account_id) REFERENCES accounts(id)
+);
+
+CREATE TABLE IF NOT EXISTS snowballadjustments (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  account_id INTEGER NOT NULL,
+  date INTEGER NOT NULL,
+  balance REAL NOT NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id),
+  FOREIGN KEY (account_id) REFERENCES accounts(id)
+);
 
 -- INSERT INTO
 --   users (name, email, username)
@@ -44,7 +63,28 @@ CREATE TABLE IF NOT EXISTS snapshots (
 --   );
 
 -- INSERT INTO
---   loans (user_id, name, apr, min_payment, is_closed)
+--   accounts(user_id, name, provider, apr, min_payment)
+-- VALUES
+--   (1, '3845372', 'Firstmark', 5.74, 166.43),
+--   (1, '3845371', 'Firstmark', 5.24, 162.46),
+--   (1, 'B-A', 'Nelnet', 3.61, 17.98),
+--   (1, 'B-B', 'Nelnet', 3.61, 11.54),
+--   (1, 'B-C', 'Nelnet', 4.41, 24.65),
+--   (1, 'B-D', 'Nelnet', 4.41, 12.44),
+--   (1, 'B-E', 'Nelnet', 4.04, 29.00),
+--   (1, 'B-F', 'Nelnet', 4.04, 40.01),
+--   (1, 'B-G', 'Nelnet', 3.51, 27.41),
+--   (1, 'B-H', 'Nelnet', 3.51, 36.14),
+--   (1, 'H-A', 'Nelnet', 3.86, 40.24),
+--   (1, 'H-B', 'Nelnet', 4.66, 50.03),
+--   (1, 'H-C', 'Nelnet', 4.66, 12.81),
+--   (1, 'H-D', 'Nelnet', 4.29, 63.07),
+--   (1, 'H-E', 'Nelnet', 3.76, 61.8),
+--   (1, 'H-F', 'Nelnet', 3.76, 82.34);
+  
+
+-- INSERT INTO
+--   accounts (user_id, name, apr, min_payment, is_closed)
 -- VALUES
 --   (1, '0127', 5.24, 162.46, 0),
 --   (1, '0129', 5.74, 166.43, 0),
@@ -71,6 +111,6 @@ CREATE TABLE IF NOT EXISTS snapshots (
 --   apr,
 --   min_payment
 -- FROM
---   loans
+--   accounts
 -- WHERE
 --   user_id = 1;--Brian DeVries

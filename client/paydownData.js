@@ -33,13 +33,15 @@ function getMonthString(monthInt) {
  * @param {string} paydownMethod String to set paydown method
  * @param {number} initSnowball Starting snowball payment amount (default is 0)
  * @param {types.ExtraPayment[]} oneTimePayments Extra one-off payments
+ * @param {types.ExtraPayment[]} snowballAdjustments Adjustments to the monthly snowball
  * @returns {types.PaydownDataDetail} An array of payment details with the date and an array of payments
  */
 function calculatePaydownSchedule(
   loans,
   paydownMethod = PAYDOWN_METHODS.snowball,
   initSnowball = 0,
-  oneTimePayments = []
+  oneTimePayments = [],
+  snowballAdjustments = []
 ) {
   // Input validation
   if (!Array.isArray(loans) || loans.length === 0) {
@@ -72,6 +74,21 @@ function calculatePaydownSchedule(
     if (currentYear === nowYear && currentMonth === nowMonth) {
       snowballAmount += initSnowball;
     }
+
+    // console.log("snowballAdjustments", snowballAdjustments);
+
+    let currentMonthSnowballAdjustment = snowballAdjustments.filter(change => {
+      const changeDate = new Date(change.date);
+      console.log("snowballAdjustmentDate", changeDate.getMonth() + "/" + changeDate.getFullYear());
+      return changeDate.getFullYear() === currentYear && changeDate.getMonth() === currentMonth;
+    })[0];
+
+    // console.log(currentMonthSnowballAdjustment);
+
+    if (!!currentMonthSnowballAdjustment) {
+      snowballAmount += currentMonthSnowballAdjustment.amount;
+    }
+
     if (isCurrentOrFutureMonth(currentMonth, currentYear, nowMonth, nowYear)) {
       monthsLeft++;
     }

@@ -1,20 +1,20 @@
 /**
  * @typedef Loan
- * @property {String} name
- * @property {Date} dateOpened
- * @property {string} id
- * @property {number} balance
+ * @property {String} name Account Name
+ * @property {number} id
  * @property {string} provider
- * @property {number} apr
- * @property {number} minPayment
- * @property {Date|null} lastSnapshot
+ * @property {number} apr Annual percent rate
+ * @property {number} minPayment Minimum payment amount
+ * @property {Date} [dateOpened]
+ * @property {number} [balance]
+ * @property {Date|null} [lastSnapshot]
  *
  * @typedef BalanceDetail
- * @property {string} loanID
+ * @property {number} loanID
  * @property {number} balance
  * 
  * @typedef PaymentDetail
- * @property {string} loanID
+ * @property {number} loanID
  * @property {number} balance
  * @property {number} interestPaid
  * @property {number} principalPaid
@@ -62,6 +62,7 @@
  * @typedef ExtraPayment
  * @property {string} date
  * @property {number} amount
+ * @property {string} [note]
  * 
  * @typedef NextPaymentsReturn
  * @property {Loan[]} loans

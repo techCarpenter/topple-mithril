@@ -12,10 +12,9 @@ const LoanService = {
         user_id as userId,
         name,
         apr,
-        min_payment as minPayment,
-        is_closed as isClosed
+        min_payment as minPayment
       FROM
-        loans
+        accounts
       WHERE
         user_id = 1`);
 
@@ -32,10 +31,9 @@ const LoanService = {
         user_id as userId,
         name,
         apr,
-        min_payment as minPayment,
-        is_closed as isClosed
+        min_payment as minPayment
       FROM
-        loans
+        accounts
       WHERE
         id = ${loanId} AND user_id = 1`);
 
@@ -49,24 +47,21 @@ const LoanService = {
     let returnedLoans = [];
 
     let insertLoan = db.prepare(`
-      INSERT INTO loans
+      INSERT INTO accounts
         (user_id,
         name,
         apr,
-        min_payment,
-        is_closed)
+        min_payment)
       VALUES (
         1,
         @name,
         @apr,
-        @minPayment,
-        0
+        @minPayment
       ) RETURNING
        id,
        name,
        user_id AS userId,
-       min_payment AS minPayment,
-       is_closed AS isClosed;
+       min_payment AS minPayment;
       `);
 
     let insertLoans = db.transaction((loans) => {
@@ -77,15 +72,17 @@ const LoanService = {
     insertLoans(newLoans);
     return returnedLoans;
   },
+  /**
+   * @param {types.Loan} loan
+   */
   updateLoan: async (loan) => {
     let update = db.prepare(`
-    UPDATE loans
+    UPDATE accounts
     SET
       user_id = 1,
       name = @name,
       apr = @apr,
-      min_payment = @minPayment,
-      is_closed = @isClosed
+      min_payment = @minPayment
     WHERE
       id = @id
     RETURNING
@@ -93,14 +90,16 @@ const LoanService = {
       user_id AS userId,
       name,
       apr,
-      min_payment AS minPayment,
-      is_closed AS isClosed;
+      min_payment AS minPayment;
     `);
 
     return update.get(loan);
 
   },
-  deleteLoan: async (loanId) => { },
+  /**
+   * @param {Number} loanId
+   */
+  deleteLoan: async (loanId) => { console.warn("deleteAccount not implemented"); },
 }
 
 export { LoanService }
