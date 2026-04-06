@@ -1,18 +1,25 @@
 /**
  * @typedef Loan
- * @property {String} name Account Name
+ * @property {string} name
  * @property {number} id
  * @property {string} provider
- * @property {number} apr Annual percent rate
- * @property {number} minPayment Minimum payment amount
- * @property {Date} [dateOpened]
+ * @property {number} apr
+ * @property {number} minPayment
+ * @property {Date} [payoffStartDate]
  * @property {number} [balance]
- * @property {Date|null} [lastSnapshot]
+ * @property {Date | null} [lastSnapshot]
  *
  * @typedef BalanceDetail
  * @property {number} loanID
  * @property {number} balance
- * 
+ *
+ * @typedef SnapshotRecord
+ * @property {number} id
+ * @property {number} userId
+ * @property {number} accountId
+ * @property {number} date
+ * @property {number} balance
+ *
  * @typedef PaymentDetail
  * @property {number} loanID
  * @property {number} balance
@@ -23,28 +30,15 @@
  * @typedef PayPeriodDetail
  * @property {Date} date
  * @property {PaymentDetail[]} payments
- * 
+ *
  * @typedef SnapshotDetail
  * @property {Date} date
  * @property {BalanceDetail[]} balances
  *
  * @typedef AccountPayoffDetail
- * @property {string} id
+ * @property {number} id
  * @property {Date} payoffDate
  * @property {number} newSnowball
- *
- * @typedef Line
- * @property {string} shape
- * @property {number} smoothing
- * @property {number} width
- *
- * @typedef PlotlyTrace
- * @property {string} name
- * @property {number[]} x
- * @property {number[]} y
- * @property {string} mode
- * @property {string} type
- * @property {Line} line
  *
  * @typedef PaydownDataDetail
  * @property {PayPeriodDetail[]} paymentArray
@@ -60,24 +54,36 @@
  * @property {number} finalSnowball
  *
  * @typedef ExtraPayment
- * @property {string} date
+ * @property {number} id
+ * @property {number} userId
+ * @property {number} date
  * @property {number} amount
- * @property {string} [note]
- * 
- * @typedef NextPaymentsReturn
- * @property {Loan[]} loans
- * @property {number} extraPayment
- * @property {PayPeriodDetail} paymentObj
- * 
- * @typedef ExtraPaymentReturn
- * @property {Loan[]} loans
- * @property {PayPeriodDetail} paymentObj
- * 
+ *
+ * @typedef SnowballAdjustment
+ * @property {number} id
+ * @property {number} userId
+ * @property {number} date
+ * @property {number} amount
+ *
+ * @typedef Notice
+ * @property {"success" | "error"} kind
+ * @property {string} message
+ * @property {number} timestamp
+ *
  * @typedef State
+ * @property {string} activeView
  * @property {number} snowball
- * @property {PaydownDataDetail} paydownData
- * @property {Loan[]} accounts
- * @property {SnapshotDetail[]} historicBalanceArray
- * @property {SnapshotDetail[]} balanceSnapshots
+ * @property {string} paydownMethod
+ * @property {Loan[]} loans
+ * @property {SnapshotRecord[]} snapshots
+ * @property {ExtraPayment[]} extraPayments
+ * @property {SnowballAdjustment[]} snowballAdjustments
+ * @property {{ initialize: boolean, loans: boolean, snapshots: boolean, extraPayments: boolean, snowballAdjustments: boolean }} loading
+ * @property {{ loans: boolean, snapshots: boolean, extraPayments: boolean, snowballAdjustments: boolean }} mutations
+ * @property {{ initialize: string | null, loans: string | null, snapshots: string | null, extraPayments: string | null, snowballAdjustments: string | null }} errors
+ * @property {{ loan: string | null, snapshot: string | null, extraPayment: string | null, snowballAdjustment: string | null }} formErrors
+ * @property {Notice | null} notice
+ * @property {{ loan: { name: string, provider: string, apr: string, minPayment: string }, snapshot: { accountId: string, date: string, balance: string }, extraPayment: { date: string, amount: string }, snowballAdjustment: { date: string, amount: string } }} forms
+ * @property {{ loanId: number | null, snapshotId: number | null, extraPaymentId: number | null, snowballAdjustmentId: number | null }} editing
  */
-export default {}
+export default {};

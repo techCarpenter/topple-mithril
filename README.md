@@ -10,7 +10,7 @@ const account = {
   startingBalance: 6676.12,
   apr: 3.76,
   minPayment: 82.34,
-  dateOpened: new Date("2024-04-01"),
+  payoffStartDate: new Date("2024-04-01"),
   paidOffDate: null,
 }
 ```

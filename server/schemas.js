@@ -149,11 +149,10 @@ const createSnapshotResponseSchema = {
 
 const extraPaymentSchema = {
   type: "object",
-  required: ["id", "userId", "accountId", "date", "amount"],
+  required: ["id", "userId", "date", "amount"],
   properties: {
     id: { type: "integer" },
     userId: { type: "integer" },
-    accountId: { type: "integer" },
     date: timestampSchema,
     amount: { type: "number" }
   }
@@ -161,9 +160,8 @@ const extraPaymentSchema = {
 
 const extraPaymentInputSchema = {
   type: "object",
-  required: ["accountId", "date", "amount"],
+  required: ["date", "amount"],
   properties: {
-    accountId: { type: "integer" },
     date: timestampSchema,
     amount: { type: "number" }
   }

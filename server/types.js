@@ -5,7 +5,7 @@
  * @property {string} provider
  * @property {number} apr Annual percent rate
  * @property {number} minPayment Minimum payment amount
- * @property {Date} [dateOpened]
+ * @property {Date} [payoffStartDate]
  * @property {number} [balance]
  * @property {Date|null} [lastSnapshot]
  *

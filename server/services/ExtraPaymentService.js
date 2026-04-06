@@ -4,19 +4,17 @@ const DEFAULT_USER_ID = 1;
 const EXTRA_PAYMENT_COLUMNS = `
   id,
   user_id AS userId,
-  account_id AS accountId,
   date,
-  balance AS amount
+  amount
 `;
 
 /**
- * @param {{ id?: number, accountId: number, date: number, amount: number }} extraPayment
+ * @param {{ id?: number, date: number, amount: number }} extraPayment
  */
 function toExtraPaymentParams(extraPayment) {
   return {
     id: extraPayment.id,
     userId: DEFAULT_USER_ID,
-    accountId: extraPayment.accountId,
     date: extraPayment.date,
     amount: extraPayment.amount
   };
@@ -75,12 +73,10 @@ const ExtraPaymentService = {
     const insertExtraPayment = db.prepare(`
       INSERT INTO extrapayments
         (user_id,
-        account_id,
         date,
-        balance)
+        amount)
       VALUES (
         @userId,
-        @accountId,
         @date,
         @amount
       ) RETURNING
@@ -101,9 +97,8 @@ const ExtraPaymentService = {
     const update = db.prepare(`
       UPDATE extrapayments
       SET
-        account_id = @accountId,
         date = @date,
-        balance = @amount
+        amount = @amount
       WHERE
         id = @id
         AND user_id = @userId

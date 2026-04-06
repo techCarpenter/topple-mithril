@@ -5,7 +5,7 @@ const SNOWBALL_ADJUSTMENT_COLUMNS = `
   id,
   user_id AS userId,
   date,
-  balance AS amount
+  amount
 `;
 
 /**
@@ -74,7 +74,7 @@ const SnowballAdjustmentService = {
       INSERT INTO snowballadjustments
         (user_id,
         date,
-        balance)
+        amount)
       VALUES (
         @userId,
         @date,
@@ -98,7 +98,7 @@ const SnowballAdjustmentService = {
       UPDATE snowballadjustments
       SET
         date = @date,
-        balance = @amount
+        amount = @amount
       WHERE
         id = @id
         AND user_id = @userId

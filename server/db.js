@@ -20,11 +20,48 @@ await readFile(SCHEMA_FILE_PATH)
   .then(file => db.exec(file.toString()))
   .catch(err => console.error(err));
 
+function migrateExtraPaymentsTable() {
+  const columns = db.prepare("PRAGMA table_info(extrapayments)").all();
+  const hasAccountId = columns.some(column => column.name === "account_id");
+  const hasBalance = columns.some(column => column.name === "balance");
+  const hasAmount = columns.some(column => column.name === "amount");
+
+  if (!hasAccountId && hasAmount && !hasBalance) {
+    return;
+  }
+
+  db.transaction(() => {
+    db.exec(`
+      ALTER TABLE extrapayments RENAME TO extrapayments_legacy;
+
+      CREATE TABLE extrapayments (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        date INTEGER NOT NULL,
+        amount REAL NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+      );
+
+      INSERT INTO extrapayments (id, user_id, date, amount)
+      SELECT
+        id,
+        user_id,
+        date,
+        ${hasAmount ? "amount" : "balance"}
+      FROM extrapayments_legacy;
+
+      DROP TABLE extrapayments_legacy;
+    `);
+  })();
+}
+
 function migrateSnowballAdjustmentsTable() {
   const columns = db.prepare("PRAGMA table_info(snowballadjustments)").all();
   const hasAccountId = columns.some(column => column.name === "account_id");
+  const hasBalance = columns.some(column => column.name === "balance");
+  const hasAmount = columns.some(column => column.name === "amount");
 
-  if (!hasAccountId) {
+  if (!hasAccountId && hasAmount && !hasBalance) {
     return;
   }
 
@@ -36,12 +73,16 @@ function migrateSnowballAdjustmentsTable() {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER NOT NULL,
         date INTEGER NOT NULL,
-        balance REAL NOT NULL,
+        amount REAL NOT NULL,
         FOREIGN KEY (user_id) REFERENCES users(id)
       );
 
-      INSERT INTO snowballadjustments (id, user_id, date, balance)
-      SELECT id, user_id, date, balance
+      INSERT INTO snowballadjustments (id, user_id, date, amount)
+      SELECT
+        id,
+        user_id,
+        date,
+        ${hasAmount ? "amount" : "balance"}
       FROM snowballadjustments_legacy;
 
       DROP TABLE snowballadjustments_legacy;
@@ -49,6 +90,7 @@ function migrateSnowballAdjustmentsTable() {
   })();
 }
 
+migrateExtraPaymentsTable();
 migrateSnowballAdjustmentsTable();
 
 export { db };

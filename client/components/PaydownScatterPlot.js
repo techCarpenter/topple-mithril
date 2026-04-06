@@ -4,7 +4,7 @@ import m from "mithril";
 import * as Plotly from "plotly.js-basic-dist-min";
 import { CreateTrace, lineGraphConfig } from "../paydownScatterPlotConfig";
 import { deepCopy } from "../paydownData";
-import { state } from "../state";
+import { selectors, state } from "../state/index.js";
 
 let config = deepCopy(lineGraphConfig);
 
@@ -13,33 +13,34 @@ function plotChartData() {
   config.layout.shapes[0].x0 = now;
   config.layout.shapes[0].x1 = now;
 
-  let updatedChart = updateChart(state.accounts, config);
+  const payoffLoans = selectors.payoffLoans();
+  const historicBalanceArray = selectors.historicBalanceArray();
+  const paydownData = selectors.paydownData();
+  let updatedChart = updateChart(payoffLoans, historicBalanceArray, paydownData, config);
   config.data = updatedChart.data;
   config.layout.datarevision = updatedChart.layout.datarevision;
   config.layout.height = 450;
-
-  console.log("updateChart", updatedChart);
 
   Plotly.react("plotly-chart", config.data, config.layout, config.config);
 }
 
 /**
  * @param {types.Loan[]} accounts
+ * @param {types.SnapshotDetail[]} historicBalanceArray
+ * @param {types.PaydownDataDetail} paydownData
  * @param {Plotly.PlotlyDataLayoutConfig} chartConfig
  */
-const updateChart = (accounts, chartConfig) => {
-  console.log(accounts);
+const updateChart = (accounts, historicBalanceArray, paydownData, chartConfig) => {
   let updatedConfig = deepCopy(chartConfig);
   if (accounts && accounts !== null && accounts.length > 0) {
 
     try {
-      console.log("paymentArray: ", state.paydownData.paymentArray);
-      let xTrace = [...state.historicBalanceArray.map(x => x.date).slice(0, -1), ...state.paydownData.paymentArray.map(x => x.date)];
+      let xTrace = [...historicBalanceArray.map(x => x.date).slice(0, -1), ...paydownData.paymentArray.map(x => x.date)];
       let traces = [],
         yTrace = [];
 
       for (let i = 0; i < accounts.length; i++) {
-        let historicYData = state.historicBalanceArray.slice(0, -1).map(
+        let historicYData = historicBalanceArray.slice(0, -1).map(
           balancePeriod => {
             let balanceInfo = balancePeriod.balances.filter(
               bal => bal.loanID === accounts[i].id);
@@ -50,7 +51,7 @@ const updateChart = (accounts, chartConfig) => {
             }
           }
         ),
-          projectedYData = state.paydownData.paymentArray.map(
+          projectedYData = paydownData.paymentArray.map(
             payPeriod => {
               let paymentInfo = payPeriod.payments.filter(
                 payment =>
@@ -64,7 +65,6 @@ const updateChart = (accounts, chartConfig) => {
             }
           );
         yTrace = [...historicYData, ...projectedYData];
-        console.log("yTrace", yTrace);
         traces.push(
           CreateTrace({
             y: yTrace,
@@ -73,8 +73,6 @@ const updateChart = (accounts, chartConfig) => {
           })
         );
       }
-
-      console.log("traces: ", traces);
 
       updatedConfig.data = traces;
       updatedConfig.layout.datarevision = Date.now();
@@ -90,10 +88,26 @@ const updateChart = (accounts, chartConfig) => {
  */
 const PlotlyLineChart = {
   view: () => {
+    if (state.loans.length === 0) {
+      return m("p", "No loan data available.");
+    }
+
+    if (state.snapshots.length === 0) {
+      return m("p", "No snapshot data available yet. Add snapshots to render the payoff chart.");
+    }
+
     return m("div#plotly-chart")
   },
-  oncreate: () => plotChartData(),
-  onupdate: () => plotChartData()
+  oncreate: () => {
+    if (state.snapshots.length > 0) {
+      plotChartData();
+    }
+  },
+  onupdate: () => {
+    if (state.snapshots.length > 0) {
+      plotChartData();
+    }
+  }
 }
 
 export { PlotlyLineChart }

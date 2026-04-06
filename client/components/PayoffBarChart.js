@@ -2,27 +2,35 @@ import m from "mithril";
 import * as Plotly from "plotly.js-basic-dist-min";
 import { CreateBarTrace, barChartConfig } from "../barChartConfig";
 import { deepCopy } from "../paydownData";
-import { state } from "../state";
+import { selectors, state } from "../state/index.js";
 
 let config = deepCopy(barChartConfig);
 
 function plotChartData() {
-  let updatedChart = updateChart(state.accounts, config);
+  const payoffLoans = selectors.payoffLoans();
+  const historicBalanceArray = selectors.historicBalanceArray();
+  const paydownData = selectors.paydownData();
+  let updatedChart = updateChart(payoffLoans, historicBalanceArray, paydownData, config);
   config.data = updatedChart.data;
   config.layout.datarevision = updatedChart.layout.datarevision;
 
   Plotly.react("payff-bar-chart", config.data, config.layout, config.config);
 }
 
-const updateChart = (accounts, chartConfig) => {
+const updateChart = (accounts, historicBalanceArray, paydownData, chartConfig) => {
   let updatedConfig = deepCopy(chartConfig);
 
   if (accounts && accounts !== null && accounts.length > 0) {
     try {
       let data = [];
+      const currentMonthPaymentPeriod = paydownData.paymentArray.find(payPeriod => {
+        const now = new Date();
+        return payPeriod.date.getFullYear() === now.getFullYear() &&
+          payPeriod.date.getMonth() === now.getMonth();
+      }) ?? paydownData.paymentArray[0];
 
       for (let i = 0; i < accounts.length; i++) {
-        let historicYData = state.historicBalanceArray.slice(0, -1).map(
+        let historicYData = historicBalanceArray.slice(0, -1).map(
           balancePeriod => {
             let balanceInfo = balancePeriod.balances.filter(
               bal => bal.loanID === accounts[i].id);
@@ -33,8 +41,8 @@ const updateChart = (accounts, chartConfig) => {
             }
           }
         ),
-          currentBalance = state.paydownData.paymentArray.filter(payPeriod => payPeriod.date.getFullYear() === (new Date).getFullYear() && payPeriod.date.getMonth() === (new Date).getMonth())[0].payments.filter(p => p.loanID === accounts[i].id)[0].balance,
-          maxBalance = Math.max(...historicYData);
+          currentBalance = currentMonthPaymentPeriod?.payments.find(p => p.loanID === accounts[i].id)?.balance ?? accounts[i].balance ?? 0,
+          maxBalance = Math.max(accounts[i].balance ?? 0, ...historicYData);
 
         data.push({
           name: accounts[i].name,
@@ -91,10 +99,26 @@ function formatBarData(data) {
  */
 const PlotlyBarChart = {
   view: () => {
+    if (state.loans.length === 0) {
+      return m("p", "No loan data available.");
+    }
+
+    if (state.snapshots.length === 0) {
+      return m("p", "No snapshot data available yet. Add snapshots to render the balance chart.");
+    }
+
     return m("div#payff-bar-chart")
   },
-  oncreate: () => plotChartData(),
-  onupdate: () => plotChartData()
+  oncreate: () => {
+    if (state.snapshots.length > 0) {
+      plotChartData();
+    }
+  },
+  onupdate: () => {
+    if (state.snapshots.length > 0) {
+      plotChartData();
+    }
+  }
 }
 
 export { PlotlyBarChart }

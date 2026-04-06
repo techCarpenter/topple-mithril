@@ -60,7 +60,7 @@ function calculatePaydownSchedule(
     /** @type {types.PayPeriodDetail[]} */ allPaymentData = [],
     snowballAmount = 0,
     /** @type {types.Loan[]} */ loansCopy = deepCopy(loans),
-    startDate = loansCopy.map(loan => loan.dateOpened).sort(dateSortAsc)[0],
+    startDate = loansCopy.map(loan => loan.payoffStartDate).sort(dateSortAsc)[0],
     currentYear = startDate.getFullYear(),
     currentMonth = startDate.getMonth(),
     monthsLeft = 0,
@@ -77,13 +77,10 @@ function calculatePaydownSchedule(
 
     // console.log("snowballAdjustments", snowballAdjustments);
 
-    let currentMonthSnowballAdjustment = snowballAdjustments.filter(change => {
+    const currentMonthSnowballAdjustment = snowballAdjustments.find(change => {
       const changeDate = new Date(change.date);
-      console.log("snowballAdjustmentDate", changeDate.getMonth() + "/" + changeDate.getFullYear());
       return changeDate.getFullYear() === currentYear && changeDate.getMonth() === currentMonth;
-    })[0];
-
-    // console.log(currentMonthSnowballAdjustment);
+    });
 
     if (!!currentMonthSnowballAdjustment) {
       snowballAmount += currentMonthSnowballAdjustment.amount;
@@ -440,15 +437,15 @@ function calculateMonthlyPaymentDetails(loans, currentMonth, currentYear) {
 }
 
 /**
- * Checks if this is the month the loan was opened
+ * Checks if this is the month the payoff starts for the loan
  * @param {types.Loan} loan The loan to check
  * @param {number} currentMonth Current month
  * @param {number} currentYear Current year
- * @returns {boolean} True if loan opens this month
+ * @returns {boolean} True if payoff starts this month
  */
 function isLoanOpeningMonth(loan, currentMonth, currentYear) {
-  return loan.dateOpened.getMonth() === currentMonth &&
-    loan.dateOpened.getFullYear() === currentYear;
+  return loan.payoffStartDate.getMonth() === currentMonth &&
+    loan.payoffStartDate.getFullYear() === currentYear;
 }
 
 /**
@@ -459,9 +456,9 @@ function isLoanOpeningMonth(loan, currentMonth, currentYear) {
  * @returns {boolean} True if loan is active for payment
  */
 function isLoanActiveForPayment(loan, currentMonth, currentYear) {
-  return (loan.dateOpened.getMonth() < currentMonth &&
-    loan.dateOpened.getFullYear() === currentYear) ||
-    loan.dateOpened.getFullYear() < currentYear;
+  return (loan.payoffStartDate.getMonth() < currentMonth &&
+    loan.payoffStartDate.getFullYear() === currentYear) ||
+    loan.payoffStartDate.getFullYear() < currentYear;
 }
 
 /**
