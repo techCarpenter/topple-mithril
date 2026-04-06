@@ -1,0 +1,19 @@
+[Unit]
+Description=Topple Fastify app
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=topple
+Group=topple
+WorkingDirectory=/srv/topple-mithril
+EnvironmentFile=/srv/topple-mithril/.env
+ExecStart=/usr/bin/node server/server.js
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

@@ -9,11 +9,13 @@
   "scripts": {
     "client-dev": "parcel index.html --no-cache --port 8080 --open",
     "client-build": "parcel build index.html",
+    "build": "parcel build index.html",
     "seed-dev-db": "node scripts/seed-dev-db.js",
     "server-dev": "nodemon --env-file=.env --watch server --ext js,json,html,css server/server.js",
     "dev": "concurrently \"npm run server-dev\" \"npm run client-dev\"",
-    "deploy": "rm -rf dist && npm run client-build",
-    "prod": "node --env-file=.env server/server.js"
+    "deploy": "npm run build",
+    "start": "node --env-file=.env server/server.js",
+    "prod": "npm run start"
   },
   "dependencies": {
     "@fastify/static": "^8.0.2",

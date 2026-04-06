@@ -3,8 +3,14 @@ import { fastifyStatic } from '@fastify/static';
 import fastifySwagger from '@fastify/swagger';
 import fastifySwaggerUi from '@fastify/swagger-ui';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import { db } from './db.js';
 import Fastify from 'fastify';
+
+const SERVER_DIR = path.dirname(fileURLToPath(import.meta.url));
+const PROJECT_ROOT = path.resolve(SERVER_DIR, "..");
+const DIST_DIR = process.env.DIST_DIR ?? path.resolve(PROJECT_ROOT, "dist");
+const LOG_DIR = process.env.LOG_DIR ?? path.resolve(PROJECT_ROOT, "logs");
 
 const envToLogger = {
   development: {
@@ -22,7 +28,7 @@ const envToLogger = {
       options: {
         ignore: 'pid',
         messageFormat: '{msg} [id={reqId} {req.method} {req.url}]',
-        file: path.resolve('logs', 'log'),
+        file: path.resolve(LOG_DIR, 'log'),
         frequency: 'daily',
         dateFormat: "yyyyMMdd",
         mkdir: true
@@ -71,18 +77,16 @@ async function main() {
   //serve static files in production
   if (process.env.NODE_ENV === 'production') {
     fastify.register(fastifyStatic, {
-      root: path.resolve('dist')
+      root: DIST_DIR
     });
   }
 
   // Run the server!
   try {
-    let port = 3000;
-    if (process.env.NODE_ENV === 'production' && process.env.PORT) {
-      port = parseInt(process.env.PORT);
-    }
+    const host = process.env.HOST ?? "0.0.0.0";
+    const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
-    fastify.listen({ port });
+    await fastify.listen({ host, port });
   } catch (err) {
     fastify.log.error(err)
     process.exit(1);

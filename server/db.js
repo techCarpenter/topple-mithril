@@ -1,11 +1,16 @@
 import Database from "better-sqlite3";
 import { readFile } from "fs/promises";
 import path from "path";
+import { fileURLToPath } from "url";
 
-const SCHEMA_FILE_PATH = path.resolve("data", "schema.sql");
-const DB_DEV_FILE_PATH = path.resolve("data", "topple-dev.db");
-const DB_PROD_FILE_PATH = path.resolve("data", "topple-prod.db");
-const DB_FILE_PATH = process.env.NODE_ENV === "production" ? DB_PROD_FILE_PATH : DB_DEV_FILE_PATH;
+const SERVER_DIR = path.dirname(fileURLToPath(import.meta.url));
+const PROJECT_ROOT = path.resolve(SERVER_DIR, "..");
+const APP_DATA_DIR = process.env.DATA_DIR ?? path.resolve(PROJECT_ROOT, "data");
+const SCHEMA_FILE_PATH = process.env.SCHEMA_FILE ?? path.resolve(PROJECT_ROOT, "data", "schema.sql");
+const DEFAULT_DB_FILE_PATH = process.env.NODE_ENV === "production"
+  ? path.resolve(APP_DATA_DIR, "topple-prod.db")
+  : path.resolve(APP_DATA_DIR, "topple-dev.db");
+const DB_FILE_PATH = process.env.DB_FILE ?? DEFAULT_DB_FILE_PATH;
 
 const db = new Database(DB_FILE_PATH, {
   fileMustExist: false,
@@ -13,15 +18,18 @@ const db = new Database(DB_FILE_PATH, {
   verbose: process.env.NODE_ENV === "production" ? undefined : console.log
 });
 
-//WAL mode for improved performance
-db.pragma('journal_mode = WAL');
+db.pragma("foreign_keys = ON");
 
-await readFile(SCHEMA_FILE_PATH)
-  .then(file => db.exec(file.toString()))
-  .catch(err => console.error(err));
+// WAL mode is a solid default for a single-node SQLite app.
+db.pragma("journal_mode = WAL");
 
-function migrateExtraPaymentsTable() {
-  const columns = db.prepare("PRAGMA table_info(extrapayments)").all();
+function migrateExtraPaymentsTable(database) {
+  const columns = database.prepare("PRAGMA table_info(extrapayments)").all();
+
+  if (columns.length === 0) {
+    return;
+  }
+
   const hasAccountId = columns.some(column => column.name === "account_id");
   const hasBalance = columns.some(column => column.name === "balance");
   const hasAmount = columns.some(column => column.name === "amount");
@@ -30,8 +38,8 @@ function migrateExtraPaymentsTable() {
     return;
   }
 
-  db.transaction(() => {
-    db.exec(`
+  database.transaction(() => {
+    database.exec(`
       ALTER TABLE extrapayments RENAME TO extrapayments_legacy;
 
       CREATE TABLE extrapayments (
@@ -55,8 +63,13 @@ function migrateExtraPaymentsTable() {
   })();
 }
 
-function migrateSnowballAdjustmentsTable() {
-  const columns = db.prepare("PRAGMA table_info(snowballadjustments)").all();
+function migrateSnowballAdjustmentsTable(database) {
+  const columns = database.prepare("PRAGMA table_info(snowballadjustments)").all();
+
+  if (columns.length === 0) {
+    return;
+  }
+
   const hasAccountId = columns.some(column => column.name === "account_id");
   const hasBalance = columns.some(column => column.name === "balance");
   const hasAmount = columns.some(column => column.name === "amount");
@@ -65,8 +78,8 @@ function migrateSnowballAdjustmentsTable() {
     return;
   }
 
-  db.transaction(() => {
-    db.exec(`
+  database.transaction(() => {
+    database.exec(`
       ALTER TABLE snowballadjustments RENAME TO snowballadjustments_legacy;
 
       CREATE TABLE snowballadjustments (
@@ -90,7 +103,65 @@ function migrateSnowballAdjustmentsTable() {
   })();
 }
 
-migrateExtraPaymentsTable();
-migrateSnowballAdjustmentsTable();
+const MIGRATIONS = [
+  {
+    version: 1,
+    name: "initial_schema",
+    apply: async (database) => {
+      const schema = await readFile(SCHEMA_FILE_PATH, "utf8");
+      database.exec(schema);
+    }
+  },
+  {
+    version: 2,
+    name: "normalize_extra_payments",
+    apply: (database) => {
+      migrateExtraPaymentsTable(database);
+    }
+  },
+  {
+    version: 3,
+    name: "normalize_snowball_adjustments",
+    apply: (database) => {
+      migrateSnowballAdjustmentsTable(database);
+    }
+  }
+];
+
+function ensureMigrationsTable(database) {
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS schema_migrations (
+      version INTEGER PRIMARY KEY,
+      name TEXT NOT NULL,
+      applied_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+}
+
+async function applyMigrations(database) {
+  ensureMigrationsTable(database);
+
+  const appliedVersions = new Set(
+    database.prepare("SELECT version FROM schema_migrations").all().map(row => row.version)
+  );
+  const recordMigration = database.prepare(`
+    INSERT INTO schema_migrations (version, name)
+    VALUES (@version, @name)
+  `);
+
+  for (const migration of MIGRATIONS) {
+    if (appliedVersions.has(migration.version)) {
+      continue;
+    }
+
+    await migration.apply(database);
+    recordMigration.run({
+      version: migration.version,
+      name: migration.name
+    });
+  }
+}
+
+await applyMigrations(db);
 
 export { db };
