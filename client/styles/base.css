@@ -459,9 +459,19 @@ label span {
   margin-top: 0.8rem;
 }
 
-#plotly-chart,
-#payff-bar-chart {
-  min-height: 290px;
+.chart-canvas-shell {
+  height: 420px;
+  min-height: 420px;
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(17, 22, 25, 0.92) 0%, var(--inset-color) 100%);
+  padding: 0.6rem;
+}
+
+.planner-chart-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .planner-empty-state {
@@ -748,6 +758,11 @@ blockquote {
   .planner-details-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     column-gap: 1.25rem;
+  }
+
+  .chart-canvas-shell {
+    height: 420px;
+    min-height: 420px;
   }
 
   .account-projection-desktop {

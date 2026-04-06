@@ -1,6 +1,6 @@
 import m from "mithril";
-import { PlotlyLineChart } from "./PaydownScatterPlot.js";
-import { PlotlyBarChart } from "./PayoffBarChart.js";
+import { ProjectionLineChart } from "./PaydownScatterPlot.js";
+import { ProgressBarChart } from "./PayoffBarChart.js";
 import { actions, selectors, state } from "../state/index.js";
 
 const CHART_OPTIONS = [
@@ -37,8 +37,8 @@ const PlannerChartPanel = {
       hasPlannerData
         ? m("div.chart-panel", [
           state.plannerChartMode === "projection"
-            ? m(PlotlyLineChart)
-            : m(PlotlyBarChart)
+            ? m(ProjectionLineChart)
+            : m(ProgressBarChart)
         ])
         : m("div.planner-empty-state", [
           m("h4", "Planner charts need account balances"),

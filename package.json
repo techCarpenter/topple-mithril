@@ -20,11 +20,14 @@
     "@fastify/swagger": "^9.7.0",
     "@fastify/swagger-ui": "^5.2.5",
     "better-sqlite3": "^11.5.0",
+    "chart.js": "^4.5.1",
+    "chartjs-adapter-date-fns": "^3.0.0",
+    "chartjs-plugin-annotation": "^3.1.0",
+    "date-fns": "^4.1.0",
     "fastify": "^5.1.0",
     "mithril": "^2.2.2",
     "parcel": "^2.12.0",
-    "pino-roll": "^2.2.0",
-    "plotly.js-basic-dist-min": "^2.35.2"
+    "pino-roll": "^2.2.0"
   },
   "devDependencies": {
     "@types/mithril": "^2.2.7",
