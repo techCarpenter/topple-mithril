@@ -20,4 +20,35 @@ await readFile(SCHEMA_FILE_PATH)
   .then(file => db.exec(file.toString()))
   .catch(err => console.error(err));
 
+function migrateSnowballAdjustmentsTable() {
+  const columns = db.prepare("PRAGMA table_info(snowballadjustments)").all();
+  const hasAccountId = columns.some(column => column.name === "account_id");
+
+  if (!hasAccountId) {
+    return;
+  }
+
+  db.transaction(() => {
+    db.exec(`
+      ALTER TABLE snowballadjustments RENAME TO snowballadjustments_legacy;
+
+      CREATE TABLE snowballadjustments (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        date INTEGER NOT NULL,
+        balance REAL NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+      );
+
+      INSERT INTO snowballadjustments (id, user_id, date, balance)
+      SELECT id, user_id, date, balance
+      FROM snowballadjustments_legacy;
+
+      DROP TABLE snowballadjustments_legacy;
+    `);
+  })();
+}
+
+migrateSnowballAdjustmentsTable();
+
 export { db };

@@ -1,10 +1,20 @@
 import { UserService } from "../services/index.js";
+import { userListSchema } from "../schemas.js";
 
 /**
  * @type {import("fastify").FastifyPluginCallback}
  */
 function userRoutes(fastify, opts, done) {
-  fastify.get("/users", async (_, res) => {
+  fastify.get("/users", {
+    schema: {
+      tags: ["Users"],
+      summary: "List users",
+      description: "Returns all users in the database.",
+      response: {
+        200: userListSchema
+      }
+    }
+  }, async (_, res) => {
     res
       .code(200)
       .send(await UserService.getUsers());

@@ -1,105 +1,157 @@
 /** @import * as types from "../types.js" */
 import { db } from "../db.js";
 
+const DEFAULT_USER_ID = 1;
+const LOAN_COLUMNS = `
+  id,
+  user_id AS userId,
+  name,
+  provider,
+  apr,
+  min_payment AS minPayment
+`;
+
+/**
+ * @param {types.Loan | undefined} loan
+ * @returns {types.Loan | null}
+ */
+function normalizeLoan(loan) {
+  if (!loan) {
+    return null;
+  }
+
+  return {
+    ...loan,
+    provider: loan.provider ?? ""
+  };
+}
+
+/**
+ * @param {types.Loan} loan
+ */
+function toLoanParams(loan) {
+  return {
+    id: loan.id,
+    userId: DEFAULT_USER_ID,
+    name: loan.name,
+    provider: loan.provider?.trim() || null,
+    apr: loan.apr,
+    minPayment: loan.minPayment
+  };
+}
+
 const LoanService = {
   /**
    * @returns {Promise<types.Loan[]>}
    */
   getLoans: async () => {
-    let query = db.prepare(`
+    const query = db.prepare(`
       SELECT
-        id,
-        user_id as userId,
-        name,
-        apr,
-        min_payment as minPayment
+        ${LOAN_COLUMNS}
       FROM
         accounts
       WHERE
-        user_id = 1`);
+        user_id = @userId
+      ORDER BY
+        id`);
 
-    return /** @type {types.Loan[]} */ (query.all());
+    return /** @type {types.Loan[]} */ (
+      query.all({ userId: DEFAULT_USER_ID }).map(normalizeLoan)
+    );
   },
   /**
    * @param {number} loanId
+   * @returns {Promise<types.Loan | null>}
    */
   getLoanById: async (loanId) => {
-    console.log(`Get loan with loanId = ${loanId}`)
-    let query = db.prepare(`
+    const query = db.prepare(`
       SELECT
-        id,
-        user_id as userId,
-        name,
-        apr,
-        min_payment as minPayment
+        ${LOAN_COLUMNS}
       FROM
         accounts
       WHERE
-        id = ${loanId} AND user_id = 1`);
+        id = @loanId
+        AND user_id = @userId`);
 
-    return /** @type {types.Loan} */ (query.get());
+    return normalizeLoan(query.get({
+      loanId,
+      userId: DEFAULT_USER_ID
+    }));
   },
   /**
-   * @param {types.Loan[]} newLoans
+   * @param {types.Loan[] | types.Loan} newLoans
    * @returns {Promise<types.Loan[]>}
    */
   addLoan: async (newLoans) => {
-    let returnedLoans = [];
+    const loans = Array.isArray(newLoans) ? newLoans : [newLoans];
 
-    let insertLoan = db.prepare(`
+    if (loans.length === 0) {
+      return [];
+    }
+
+    const insertLoan = db.prepare(`
       INSERT INTO accounts
         (user_id,
         name,
+        provider,
         apr,
         min_payment)
       VALUES (
-        1,
+        @userId,
         @name,
+        @provider,
         @apr,
         @minPayment
       ) RETURNING
-       id,
-       name,
-       user_id AS userId,
-       min_payment AS minPayment;
+       ${LOAN_COLUMNS};
       `);
 
-    let insertLoans = db.transaction((loans) => {
-      for (let i = 0; i < loans.length; i++) {
-        returnedLoans = [insertLoan.get(loans[i]), ...returnedLoans];
-      }
+    const insertLoans = db.transaction((loansToInsert) => {
+      return loansToInsert.map(loan => normalizeLoan(insertLoan.get(toLoanParams(loan))));
     });
-    insertLoans(newLoans);
-    return returnedLoans;
+
+    return /** @type {types.Loan[]} */ (insertLoans(loans));
   },
   /**
    * @param {types.Loan} loan
+   * @returns {Promise<types.Loan | null>}
    */
   updateLoan: async (loan) => {
-    let update = db.prepare(`
+    const update = db.prepare(`
     UPDATE accounts
     SET
-      user_id = 1,
       name = @name,
+      provider = @provider,
       apr = @apr,
       min_payment = @minPayment
     WHERE
       id = @id
+      AND user_id = @userId
     RETURNING
-      id,
-      user_id AS userId,
-      name,
-      apr,
-      min_payment AS minPayment;
+      ${LOAN_COLUMNS};
     `);
 
-    return update.get(loan);
-
+    return normalizeLoan(update.get(toLoanParams(loan)));
   },
   /**
-   * @param {Number} loanId
+   * @param {number} loanId
+   * @returns {Promise<types.Loan | null>}
    */
-  deleteLoan: async (loanId) => { console.warn("deleteAccount not implemented"); },
+  deleteLoan: async (loanId) => {
+    const remove = db.prepare(`
+      DELETE FROM accounts
+      WHERE
+        id = @loanId
+        AND user_id = @userId
+      RETURNING
+        ${LOAN_COLUMNS};
+    `);
+
+    return normalizeLoan(remove.get({
+      loanId,
+      userId: DEFAULT_USER_ID
+    }));
+  },
 }
 
 export { LoanService }
