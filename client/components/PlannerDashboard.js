@@ -33,7 +33,7 @@ const PlannerDashboard = {
           m(PlotlyBarChart)
         ])
         : null,
-      m("div.two-column-grid", [
+      m("div.dashboard-secondary-grid", [
         m(PayoffDates),
         m(AccountProjectionTable)
       ]),

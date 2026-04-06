@@ -14,6 +14,12 @@ const ExtraPaymentManager = {
     const sortedExtraPayments = [...state.extraPayments].sort((a, b) => b.date - a.date || a.id - b.id);
 
     return m("section.stack-lg", [
+      m("section.hero-card.page-intro", [
+        m("p.eyebrow", "Extra Payments"),
+        m("h1.page-title", "Schedule one-off payoff boosts"),
+        m("p.hero-copy", "Track planned lump-sum payments so your payoff projections match the real cash you expect to throw at debt.")
+      ]),
+      m("section.management-layout", [
       m("section.panel", [
         m("div.section-heading", [
           m("div", [
@@ -72,33 +78,61 @@ const ExtraPaymentManager = {
         sortedExtraPayments.length === 0
           ? m("p.empty-copy", "No extra payments saved yet.")
           : m("div.table-wrap", [
-            m("table", [
+            m("table.responsive-table", [
               m("thead", m("tr", [
                 m("th", "Date"),
                 m("th", "Amount"),
                 m("th", "Actions")
               ])),
               m("tbody", sortedExtraPayments.map((payment) => (
-                m("tr", { key: payment.id }, [
-                  m("td", dateStringFromDate(new Date(payment.date))),
-                  m("td", currencyFormat(payment.amount)),
-                  m("td.actions-cell", [
-                    m("button.button-secondary", {
-                      type: "button",
-                      onclick: () => actions.beginEditExtraPayment(payment)
-                    }, "Edit"),
-                    m("button.button-danger", {
-                      type: "button",
-                      disabled: state.mutations.extraPayments,
-                      onclick: () => {
-                        void actions.deleteExtraPayment(payment.id);
-                      }
-                    }, "Delete")
-                  ])
-                ])
+                (() => {
+                  const paymentDate = dateStringFromDate(new Date(payment.date));
+                  const isConfirmingDelete = state.deletePrompt?.resourceKey === "extraPayments" && state.deletePrompt.id === payment.id;
+                  const isPendingDelete = state.pendingDelete?.resourceKey === "extraPayments" && state.pendingDelete.id === payment.id;
+
+                  return m("tr", { key: payment.id }, [
+                    m("td", { "data-label": "Date" }, paymentDate),
+                    m("td", { "data-label": "Amount" }, currencyFormat(payment.amount)),
+                    m("td", { "data-label": "Actions", className: "actions-cell" }, [
+                      isPendingDelete
+                        ? [
+                          m("span.inline-message", "Delete queued"),
+                          m("button.button-secondary", {
+                            type: "button",
+                            onclick: () => actions.undoPendingDelete()
+                          }, "Undo")
+                        ]
+                        : isConfirmingDelete
+                          ? [
+                            m("span.inline-message", `Delete ${paymentDate}?`),
+                            m("button.button-danger", {
+                              type: "button",
+                              disabled: state.mutations.extraPayments,
+                              onclick: () => actions.confirmDeleteRequest("extraPayments", payment.id)
+                            }, "Confirm"),
+                            m("button.button-secondary", {
+                              type: "button",
+                              onclick: () => actions.cancelDeleteRequest("extraPayments", payment.id)
+                            }, "Cancel")
+                          ]
+                          : [
+                            m("button.button-secondary", {
+                              type: "button",
+                              onclick: () => actions.beginEditExtraPayment(payment)
+                            }, "Edit"),
+                            m("button.button-danger", {
+                              type: "button",
+                              disabled: state.mutations.extraPayments,
+                              onclick: () => actions.requestDelete("extraPayments", payment.id, `Extra payment on ${paymentDate}`)
+                            }, "Delete")
+                          ]
+                    ])
+                  ]);
+                })()
               )))
             ])
           ])
+      ])
       ])
     ]);
   }

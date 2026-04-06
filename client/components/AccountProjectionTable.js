@@ -8,11 +8,17 @@ const AccountProjectionTable = {
     const rows = selectors.accountProjectionRows();
 
     return m("section.panel", [
-      m("h3", "Account Details"),
+      m("div.panel-header", [
+        m("div", [
+          m("p.eyebrow", "Accounts"),
+          m("h3", "Projected Account Details")
+        ]),
+        m("p.section-copy", "Review the latest balance and projected payoff date for each account.")
+      ]),
       rows.length === 0
         ? m("p.empty-copy", "Add snapshots to see projected payoff dates by account.")
         : m("div.table-wrap", [
-          m("table", [
+          m("table.responsive-table", [
             m("thead", m("tr", [
               m("th", "Account"),
               m("th", "APR"),
@@ -22,14 +28,14 @@ const AccountProjectionTable = {
             ])),
             m("tbody", rows.map((row) => (
               m("tr", { key: row.id }, [
-                m("td", [
+                m("td", { "data-label": "Account" }, [
                   m("strong", row.name),
                   row.provider ? m("div.table-subtext", row.provider) : null
                 ]),
-                m("td", `${row.apr.toFixed(2)}%`),
-                m("td", currencyFormat(row.minPayment)),
-                m("td", currencyFormat(row.currentBalance)),
-                m("td", row.projectedPayoffDate ? dateFormat(row.projectedPayoffDate) : "Not projected")
+                m("td", { "data-label": "APR" }, `${row.apr.toFixed(2)}%`),
+                m("td", { "data-label": "Min Payment" }, currencyFormat(row.minPayment)),
+                m("td", { "data-label": "Current Balance" }, currencyFormat(row.currentBalance)),
+                m("td", { "data-label": "Projected Payoff" }, row.projectedPayoffDate ? dateFormat(row.projectedPayoffDate) : "Not projected")
               ])
             )))
           ])

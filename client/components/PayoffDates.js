@@ -8,7 +8,13 @@ const PayoffDates = {
     const payoffTimeline = selectors.payoffTimeline();
 
     return m("section.panel", [
-      m("h3", "Payoff Timeline"),
+      m("div.panel-header", [
+        m("div", [
+          m("p.eyebrow", "Timeline"),
+          m("h3", "Payoff Timeline")
+        ]),
+        m("p.section-copy", "See the expected payoff sequence and how the snowball grows over time.")
+      ]),
       payoffTimeline.length === 0
         ? m("p.empty-copy", "Projected payoff dates appear here after you add account balances.")
         : m("ol.payoff-timeline", payoffTimeline.map((item) => (

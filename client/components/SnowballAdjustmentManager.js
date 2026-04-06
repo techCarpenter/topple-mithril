@@ -14,6 +14,12 @@ const SnowballAdjustmentManager = {
     const sortedAdjustments = [...state.snowballAdjustments].sort((a, b) => b.date - a.date || a.id - b.id);
 
     return m("section.stack-lg", [
+      m("section.hero-card.page-intro", [
+        m("p.eyebrow", "Snowball Adjustments"),
+        m("h1.page-title", "Plan monthly snowball changes"),
+        m("p.hero-copy", "Account for salary changes, budget shifts, or temporary constraints by scheduling recurring snowball adjustments.")
+      ]),
+      m("section.management-layout", [
       m("section.panel", [
         m("div.section-heading", [
           m("div", [
@@ -71,33 +77,61 @@ const SnowballAdjustmentManager = {
         sortedAdjustments.length === 0
           ? m("p.empty-copy", "No scheduled snowball adjustments yet.")
           : m("div.table-wrap", [
-            m("table", [
+            m("table.responsive-table", [
               m("thead", m("tr", [
                 m("th", "Effective date"),
                 m("th", "Amount"),
                 m("th", "Actions")
               ])),
               m("tbody", sortedAdjustments.map((adjustment) => (
-                m("tr", { key: adjustment.id }, [
-                  m("td", dateStringFromDate(new Date(adjustment.date))),
-                  m("td", currencyFormat(adjustment.amount)),
-                  m("td.actions-cell", [
-                    m("button.button-secondary", {
-                      type: "button",
-                      onclick: () => actions.beginEditSnowballAdjustment(adjustment)
-                    }, "Edit"),
-                    m("button.button-danger", {
-                      type: "button",
-                      disabled: state.mutations.snowballAdjustments,
-                      onclick: () => {
-                        void actions.deleteSnowballAdjustment(adjustment.id);
-                      }
-                    }, "Delete")
-                  ])
-                ])
+                (() => {
+                  const adjustmentDate = dateStringFromDate(new Date(adjustment.date));
+                  const isConfirmingDelete = state.deletePrompt?.resourceKey === "snowballAdjustments" && state.deletePrompt.id === adjustment.id;
+                  const isPendingDelete = state.pendingDelete?.resourceKey === "snowballAdjustments" && state.pendingDelete.id === adjustment.id;
+
+                  return m("tr", { key: adjustment.id }, [
+                    m("td", { "data-label": "Effective date" }, adjustmentDate),
+                    m("td", { "data-label": "Amount" }, currencyFormat(adjustment.amount)),
+                    m("td", { "data-label": "Actions", className: "actions-cell" }, [
+                      isPendingDelete
+                        ? [
+                          m("span.inline-message", "Delete queued"),
+                          m("button.button-secondary", {
+                            type: "button",
+                            onclick: () => actions.undoPendingDelete()
+                          }, "Undo")
+                        ]
+                        : isConfirmingDelete
+                          ? [
+                            m("span.inline-message", `Delete ${adjustmentDate}?`),
+                            m("button.button-danger", {
+                              type: "button",
+                              disabled: state.mutations.snowballAdjustments,
+                              onclick: () => actions.confirmDeleteRequest("snowballAdjustments", adjustment.id)
+                            }, "Confirm"),
+                            m("button.button-secondary", {
+                              type: "button",
+                              onclick: () => actions.cancelDeleteRequest("snowballAdjustments", adjustment.id)
+                            }, "Cancel")
+                          ]
+                          : [
+                            m("button.button-secondary", {
+                              type: "button",
+                              onclick: () => actions.beginEditSnowballAdjustment(adjustment)
+                            }, "Edit"),
+                            m("button.button-danger", {
+                              type: "button",
+                              disabled: state.mutations.snowballAdjustments,
+                              onclick: () => actions.requestDelete("snowballAdjustments", adjustment.id, `Snowball adjustment on ${adjustmentDate}`)
+                            }, "Delete")
+                          ]
+                    ])
+                  ]);
+                })()
               )))
             ])
           ])
+      ])
       ])
     ]);
   }

@@ -70,6 +70,17 @@
  * @property {string} message
  * @property {number} timestamp
  *
+ * @typedef DeleteState
+ * @property {string} resourceKey
+ * @property {number} id
+ * @property {string} label
+ *
+ * @typedef PendingDeleteState
+ * @property {string} resourceKey
+ * @property {number} id
+ * @property {string} label
+ * @property {number} expiresAt
+ *
  * @typedef State
  * @property {string} activeView
  * @property {number} snowball
@@ -82,8 +93,12 @@
  * @property {{ loans: boolean, snapshots: boolean, extraPayments: boolean, snowballAdjustments: boolean }} mutations
  * @property {{ initialize: string | null, loans: string | null, snapshots: string | null, extraPayments: string | null, snowballAdjustments: string | null }} errors
  * @property {{ loan: string | null, snapshot: string | null, extraPayment: string | null, snowballAdjustment: string | null }} formErrors
+ * @property {DeleteState | null} deletePrompt
+ * @property {PendingDeleteState | null} pendingDelete
  * @property {Notice | null} notice
- * @property {{ loan: { name: string, provider: string, apr: string, minPayment: string }, snapshot: { accountId: string, date: string, balance: string }, extraPayment: { date: string, amount: string }, snowballAdjustment: { date: string, amount: string } }} forms
- * @property {{ loanId: number | null, snapshotId: number | null, extraPaymentId: number | null, snowballAdjustmentId: number | null }} editing
+ * @property {boolean} accountEditorVisible
+ * @property {boolean} snapshotEditorVisible
+ * @property {{ loan: { name: string, provider: string, apr: string, minPayment: string }, snapshot: { date: string, balances: Record<string, string> }, extraPayment: { date: string, amount: string }, snowballAdjustment: { date: string, amount: string } }} forms
+ * @property {{ loanId: number | null, snapshotBatchDate: string | null, extraPaymentId: number | null, snowballAdjustmentId: number | null }} editing
  */
 export default {};

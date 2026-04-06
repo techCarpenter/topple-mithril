@@ -35,13 +35,30 @@ function renderActiveView() {
 const App = {
   view: function () {
     return m("div.app-shell", [
-      m("section.hero-frame", [
-        m("p.eyebrow", "Topple"),
-        m("h1.primary-title", "Account Paydown Visualizer"),
-        m("p.hero-copy", "Build your payoff plan, keep balances current, and compare the impact of every extra dollar.")
+      m("section.hero-frame.app-masthead", [
+        m("div.hero-copy-block", [
+          m("p.eyebrow", "Topple"),
+          m("h1.primary-title", "Account Paydown Visualizer"),
+          m("p.hero-copy", "Build your payoff plan, keep balances current, and compare the impact of every extra dollar.")
+        ]),
+        m("div.hero-meta", [
+          m("p.hero-meta-label", "Views"),
+          m("p.hero-meta-value", NAV_ITEMS.find((item) => item.id === state.activeView)?.label || "Planner")
+        ])
       ]),
       m(StatusBanner),
-      m("nav.tab-nav", NAV_ITEMS.map((item) => (
+      m("div.mobile-nav.panel", [
+        m("label.form-field", [
+          m("span", "View"),
+          m("select", {
+            value: state.activeView,
+            onchange: (event) => actions.setActiveView(event.target.value)
+          }, NAV_ITEMS.map((item) => (
+            m("option", { key: item.id, value: item.id }, item.label)
+          )))
+        ])
+      ]),
+      m("nav.tab-nav.desktop-nav", NAV_ITEMS.map((item) => (
         m("button", {
           key: item.id,
           type: "button",

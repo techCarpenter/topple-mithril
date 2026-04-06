@@ -11,11 +11,13 @@ function createLoanForm() {
   };
 }
 
-function createSnapshotForm(accountId = "") {
+function createSnapshotForm(loans = [], date = dateStringFromDate(new Date())) {
   return {
-    accountId,
-    date: dateStringFromDate(new Date()),
-    balance: ""
+    date,
+    balances: loans.reduce((acc, loan) => {
+      acc[String(loan.id)] = "";
+      return acc;
+    }, {})
   };
 }
 
@@ -63,7 +65,11 @@ const State = () => ({
     extraPayment: null,
     snowballAdjustment: null
   },
+  deletePrompt: null,
+  pendingDelete: null,
   notice: null,
+  accountEditorVisible: false,
+  snapshotEditorVisible: false,
   forms: {
     loan: createLoanForm(),
     snapshot: createSnapshotForm(),
@@ -72,7 +78,7 @@ const State = () => ({
   },
   editing: {
     loanId: null,
-    snapshotId: null,
+    snapshotBatchDate: null,
     extraPaymentId: null,
     snowballAdjustmentId: null
   }
@@ -88,7 +94,7 @@ const RESOURCE_CONFIG = {
   snapshots: {
     endpoint: "/api/v1/snapshots",
     formKey: "snapshot",
-    editingKey: "snapshotId",
+    editingKey: "snapshotBatchDate",
     resetForm: createSnapshotForm
   },
   extraPayments: {
@@ -105,6 +111,8 @@ const RESOURCE_CONFIG = {
   }
 };
 
+const DELETE_UNDO_DELAY_MS = 5000;
+
 function normalizeErrorMessage(error, fallbackMessage) {
   if (error instanceof Error && error.message) {
     return error.message;
@@ -113,8 +121,8 @@ function normalizeErrorMessage(error, fallbackMessage) {
   return fallbackMessage;
 }
 
-function pickDefaultAccountId(loans) {
-  return loans.length > 0 ? String(loans[0].id) : "";
+function snapshotDateKey(dateValue) {
+  return dateStringFromDate(new Date(dateValue));
 }
 
 /**
@@ -122,6 +130,8 @@ function pickDefaultAccountId(loans) {
  * @returns
  */
 const Actions = (state) => {
+  let pendingDeleteTimer = null;
+
   async function requestJson(url, options = {}) {
     const requestOptions = {
       method: options.method ?? "GET",
@@ -155,37 +165,70 @@ const Actions = (state) => {
     state.notice = null;
   }
 
-  function syncFormsWithLoans() {
-    const defaultAccountId = pickDefaultAccountId(state.loans);
-    const snapshotAccountId = String(state.forms.snapshot.accountId || "");
+  function clearDeletePrompt() {
+    state.deletePrompt = null;
+  }
 
-    if (!snapshotAccountId || !state.loans.some(loan => String(loan.id) === snapshotAccountId)) {
-      state.forms.snapshot.accountId = defaultAccountId;
+  function clearPendingDelete() {
+    if (pendingDeleteTimer) {
+      clearTimeout(pendingDeleteTimer);
+      pendingDeleteTimer = null;
     }
+
+    state.pendingDelete = null;
+  }
+
+  function syncSnapshotFormWithLoans() {
+    const nextBalances = state.loans.reduce((acc, loan) => {
+      const loanId = String(loan.id);
+      acc[loanId] = state.forms.snapshot.balances?.[loanId] ?? "";
+      return acc;
+    }, {});
+
+    state.forms.snapshot = {
+      date: state.forms.snapshot.date || dateStringFromDate(new Date()),
+      balances: nextBalances
+    };
+  }
+
+  function loadSnapshotBatch(dateString) {
+    const balances = createSnapshotForm(state.loans, dateString).balances;
+
+    for (const snapshot of state.snapshots) {
+      if (snapshotDateKey(snapshot.date) !== dateString) {
+        continue;
+      }
+
+      balances[String(snapshot.accountId)] = String(snapshot.balance);
+    }
+
+    state.forms.snapshot = {
+      date: dateString,
+      balances
+    };
   }
 
   function resetForm(resourceKey) {
     const { formKey, resetForm: getInitialForm } = RESOURCE_CONFIG[resourceKey];
-    const initialForm = getInitialForm();
+    const initialForm = formKey === "snapshot" ? getInitialForm(state.loans) : getInitialForm();
 
-    state.forms[formKey] = formKey === "snapshot"
-      ? {
-        ...initialForm,
-        accountId: pickDefaultAccountId(state.loans)
-      }
-      : initialForm;
+    state.forms[formKey] = initialForm;
 
     state.formErrors[formKey] = null;
   }
 
   function beginEdit(resourceKey, record) {
     clearNotice();
+    if (state.deletePrompt?.resourceKey === resourceKey && state.deletePrompt.id === record.id) {
+      clearDeletePrompt();
+    }
     const config = RESOURCE_CONFIG[resourceKey];
     state.formErrors[config.formKey] = null;
     state.editing[config.editingKey] = record.id;
 
     switch (resourceKey) {
       case "loans":
+        state.accountEditorVisible = true;
         state.forms.loan = {
           name: record.name ?? "",
           provider: record.provider ?? "",
@@ -194,11 +237,8 @@ const Actions = (state) => {
         };
         break;
       case "snapshots":
-        state.forms.snapshot = {
-          accountId: String(record.accountId ?? ""),
-          date: dateStringFromDate(new Date(record.date)),
-          balance: String(record.balance ?? "")
-        };
+        loadSnapshotBatch(snapshotDateKey(record.date));
+        state.editing.snapshotBatchDate = snapshotDateKey(record.date);
         break;
       case "extraPayments":
         state.forms.extraPayment = {
@@ -234,7 +274,15 @@ const Actions = (state) => {
       state[resourceKey] = Array.isArray(data) ? data : [];
 
       if (resourceKey === "loans") {
-        syncFormsWithLoans();
+        syncSnapshotFormWithLoans();
+      }
+
+      if (resourceKey === "snapshots") {
+        if (state.editing.snapshotBatchDate) {
+          loadSnapshotBatch(state.editing.snapshotBatchDate);
+        } else {
+          syncSnapshotFormWithLoans();
+        }
       }
 
       return state[resourceKey];
@@ -267,18 +315,30 @@ const Actions = (state) => {
   }
 
   function validateSnapshotForm() {
-    const balance = Number(state.forms.snapshot.balance);
-
-    if (!state.forms.snapshot.accountId) {
-      return "Choose an account before saving a snapshot.";
-    }
-
     if (!state.forms.snapshot.date) {
       return "Snapshot date is required.";
     }
 
-    if (!Number.isFinite(balance) || balance < 0) {
-      return "Balance must be 0 or greater.";
+    let hasBalance = false;
+
+    for (const loan of state.loans) {
+      const value = String(state.forms.snapshot.balances?.[String(loan.id)] ?? "").trim();
+
+      if (!value) {
+        continue;
+      }
+
+      hasBalance = true;
+
+      const balance = Number(value);
+
+      if (!Number.isFinite(balance) || balance < 0) {
+        return `Balance for ${loan.name} must be 0 or greater.`;
+      }
+    }
+
+    if (!hasBalance) {
+      return "Enter at least one balance before saving a snapshot batch.";
     }
 
     return null;
@@ -310,12 +370,6 @@ const Actions = (state) => {
           provider: state.forms.loan.provider.trim(),
           apr: Number(state.forms.loan.apr),
           minPayment: Number(state.forms.loan.minPayment)
-        };
-      case "snapshots":
-        return {
-          accountId: Number(state.forms.snapshot.accountId),
-          date: toTimestamp(state.forms.snapshot.date),
-          balance: Number(state.forms.snapshot.balance)
         };
       case "extraPayments":
         return {
@@ -361,6 +415,53 @@ const Actions = (state) => {
     }
   }
 
+  function buildSnapshotBatchOperations() {
+    const date = state.forms.snapshot.date;
+    const timestamp = toTimestamp(date);
+    const existingSnapshots = state.snapshots.filter(snapshot => snapshotDateKey(snapshot.date) === date);
+    const existingByLoanId = new Map(
+      existingSnapshots.map(snapshot => [String(snapshot.accountId), snapshot])
+    );
+    const creates = [];
+    const updates = [];
+    const deletes = [];
+
+    for (const loan of state.loans) {
+      const loanId = String(loan.id);
+      const rawValue = String(state.forms.snapshot.balances?.[loanId] ?? "").trim();
+      const existingSnapshot = existingByLoanId.get(loanId);
+
+      if (!rawValue) {
+        if (existingSnapshot) {
+          deletes.push(existingSnapshot.id);
+        }
+        continue;
+      }
+
+      const balance = Number(rawValue);
+
+      if (existingSnapshot) {
+        if (existingSnapshot.balance !== balance) {
+          updates.push({
+            id: existingSnapshot.id,
+            accountId: loan.id,
+            date: timestamp,
+            balance
+          });
+        }
+        continue;
+      }
+
+      creates.push({
+        accountId: loan.id,
+        date: timestamp,
+        balance
+      });
+    }
+
+    return { creates, updates, deletes };
+  }
+
   async function removeResource(resourceKey, id, successMessage) {
     const config = RESOURCE_CONFIG[resourceKey];
     state.mutations[resourceKey] = true;
@@ -381,6 +482,27 @@ const Actions = (state) => {
       state.mutations[resourceKey] = false;
       m.redraw();
     }
+  }
+
+  async function executeDelete(resourceKey, id, label) {
+    clearPendingDelete();
+    clearDeletePrompt();
+    await removeResource(resourceKey, id, `${label} deleted.`);
+  }
+
+  function scheduleDelete(resourceKey, id, label) {
+    clearDeletePrompt();
+    clearPendingDelete();
+    state.pendingDelete = {
+      resourceKey,
+      id,
+      label,
+      expiresAt: Date.now() + DELETE_UNDO_DELAY_MS
+    };
+
+    pendingDeleteTimer = setTimeout(() => {
+      void executeDelete(resourceKey, id, label);
+    }, DELETE_UNDO_DELAY_MS);
   }
 
   const actions = {
@@ -412,6 +534,58 @@ const Actions = (state) => {
       state.activeView = view;
     },
     clearNotice,
+    requestDelete: (resourceKey, id, label) => {
+      if (
+        state.pendingDelete &&
+        (state.pendingDelete.resourceKey !== resourceKey || state.pendingDelete.id !== id)
+      ) {
+        setNotice("error", "Undo or finish the pending delete before removing another record.");
+        return;
+      }
+
+      state.deletePrompt = { resourceKey, id, label };
+      clearNotice();
+    },
+    cancelDeleteRequest: (resourceKey, id) => {
+      if (!state.deletePrompt) {
+        return;
+      }
+
+      if (
+        state.deletePrompt.resourceKey === resourceKey &&
+        state.deletePrompt.id === id
+      ) {
+        clearDeletePrompt();
+      }
+    },
+    confirmDeleteRequest: (resourceKey, id) => {
+      if (
+        !state.deletePrompt ||
+        state.deletePrompt.resourceKey !== resourceKey ||
+        state.deletePrompt.id !== id
+      ) {
+        return;
+      }
+
+      scheduleDelete(resourceKey, id, state.deletePrompt.label);
+    },
+    undoPendingDelete: () => {
+      if (!state.pendingDelete) {
+        return;
+      }
+
+      const { label } = state.pendingDelete;
+      clearPendingDelete();
+      setNotice("success", `${label} kept.`);
+    },
+    commitPendingDeleteNow: async () => {
+      if (!state.pendingDelete) {
+        return;
+      }
+
+      const { resourceKey, id, label } = state.pendingDelete;
+      await executeDelete(resourceKey, id, label);
+    },
     setSnowball: (value) => {
       state.snowball = Number.isFinite(value) ? value : 0;
     },
@@ -424,12 +598,66 @@ const Actions = (state) => {
       state.forms[formKey][field] = value;
       state.formErrors[formKey] = null;
     },
+    updateSnapshotBatchDate: (value) => {
+      state.forms.snapshot.date = value;
+      state.formErrors.snapshot = null;
+    },
+    updateSnapshotBatchBalance: (loanId, value) => {
+      state.forms.snapshot.balances[String(loanId)] = value;
+      state.formErrors.snapshot = null;
+    },
+    showSnapshotEditor: () => {
+      state.snapshotEditorVisible = true;
+      state.formErrors.snapshot = null;
+    },
+    showAccountEditor: () => {
+      state.accountEditorVisible = true;
+      state.formErrors.loan = null;
+    },
+    hideAccountEditor: () => {
+      state.accountEditorVisible = false;
+      state.editing.loanId = null;
+      resetForm("loans");
+      clearNotice();
+    },
+    hideSnapshotEditor: () => {
+      state.snapshotEditorVisible = false;
+      state.editing.snapshotBatchDate = null;
+      resetForm("snapshots");
+      clearNotice();
+    },
     beginEditLoan: (loan) => beginEdit("loans", loan),
     beginEditSnapshot: (snapshot) => beginEdit("snapshots", snapshot),
+    beginSnapshotBatchEdit: (dateString) => {
+      clearNotice();
+      clearDeletePrompt();
+      state.formErrors.snapshot = null;
+      state.snapshotEditorVisible = true;
+      state.editing.snapshotBatchDate = dateString;
+      loadSnapshotBatch(dateString);
+    },
     beginEditExtraPayment: (extraPayment) => beginEdit("extraPayments", extraPayment),
     beginEditSnowballAdjustment: (snowballAdjustment) => beginEdit("snowballAdjustments", snowballAdjustment),
-    cancelLoanEdit: () => cancelEdit("loans"),
-    cancelSnapshotEdit: () => cancelEdit("snapshots"),
+    cancelLoanEdit: () => {
+      state.accountEditorVisible = false;
+      cancelEdit("loans");
+    },
+    cancelSnapshotEdit: () => {
+      state.snapshotEditorVisible = false;
+      cancelEdit("snapshots");
+    },
+    startNewLoan: () => {
+      state.accountEditorVisible = true;
+      state.editing.loanId = null;
+      resetForm("loans");
+      clearNotice();
+    },
+    startNewSnapshotBatch: () => {
+      state.snapshotEditorVisible = true;
+      state.editing.snapshotBatchDate = null;
+      resetForm("snapshots");
+      clearNotice();
+    },
     cancelExtraPaymentEdit: () => cancelEdit("extraPayments"),
     cancelSnowballAdjustmentEdit: () => cancelEdit("snowballAdjustments"),
     saveLoan: async () => {
@@ -452,11 +680,59 @@ const Actions = (state) => {
         setNotice("error", errorMessage);
         return;
       }
+      state.mutations.snapshots = true;
+      state.formErrors.snapshot = null;
+      state.errors.snapshots = null;
 
-      await submitResource("snapshots", {
-        created: "Snapshot saved.",
-        updated: "Snapshot updated."
-      });
+      try {
+        const { creates, updates, deletes } = buildSnapshotBatchOperations();
+        const requests = [];
+
+        if (creates.length > 0) {
+          requests.push(requestJson("/api/v1/snapshots", {
+            method: "POST",
+            body: creates.length === 1 ? creates[0] : creates
+          }));
+        }
+
+        for (const snapshot of updates) {
+          requests.push(requestJson(`/api/v1/snapshots/${snapshot.id}`, {
+            method: "PUT",
+            body: {
+              accountId: snapshot.accountId,
+              date: snapshot.date,
+              balance: snapshot.balance
+            }
+          }));
+        }
+
+        for (const snapshotId of deletes) {
+          requests.push(requestJson(`/api/v1/snapshots/${snapshotId}`, {
+            method: "DELETE"
+          }));
+        }
+
+        if (requests.length === 0) {
+          setNotice("success", "No snapshot changes to save.");
+          return;
+        }
+
+        await Promise.all(requests);
+        const savedDate = state.forms.snapshot.date;
+        await fetchCollection("snapshots");
+        state.snapshotEditorVisible = true;
+        state.editing.snapshotBatchDate = savedDate;
+        loadSnapshotBatch(savedDate);
+        setNotice("success", `Snapshot batch for ${savedDate} saved.`);
+      } catch (error) {
+        const message = normalizeErrorMessage(error, "Unable to save snapshot batch.");
+        state.formErrors.snapshot = message;
+        state.errors.snapshots = message;
+        setNotice("error", message);
+      } finally {
+        state.mutations.snapshots = false;
+        m.redraw();
+      }
     },
     saveExtraPayment: async () => {
       const errorMessage = validateDatedAmountForm("extraPayment", "Extra payment");
