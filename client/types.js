@@ -98,6 +98,8 @@
  * @property {Notice | null} notice
  * @property {boolean} accountEditorVisible
  * @property {boolean} snapshotEditorVisible
+ * @property {"projection" | "progress"} plannerChartMode
+ * @property {boolean} plannerDetailsExpanded
  * @property {{ loan: { name: string, provider: string, apr: string, minPayment: string }, snapshot: { date: string, balances: Record<string, string> }, extraPayment: { date: string, amount: string }, snowballAdjustment: { date: string, amount: string } }} forms
  * @property {{ loanId: number | null, snapshotBatchDate: string | null, extraPaymentId: number | null, snowballAdjustmentId: number | null }} editing
  */

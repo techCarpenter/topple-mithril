@@ -1,38 +1,23 @@
 import m from "mithril";
-import { PlotlyLineChart } from "./PaydownScatterPlot.js";
-import { PlotlyBarChart } from "./PayoffBarChart.js";
-import { PaydownInfo } from "./PaydownInfo.js";
+import { PlannerSummary } from "./PlannerSummary.js";
+import { PlannerChartPanel } from "./PlannerChartPanel.js";
 import { PayoffDates } from "./PayoffDates.js";
 import { AccountProjectionTable } from "./AccountProjectionTable.js";
-import { selectors, state } from "../state/index.js";
+import { state } from "../state/index.js";
 
 /** @type {m.Component} */
 const PlannerDashboard = {
   view: () => {
-    const payoffLoans = selectors.payoffLoans();
-
     return m("section.stack-lg", [
-      m("div.hero-card", [
-        m("p.eyebrow", "Planner Dashboard"),
-        m("h1.primary-title", "Model your debt paydown plan"),
-        m("p.hero-copy", "Track current balances, test payoff strategies, and keep the whole plan current from one place.")
+      m("header.planner-header", [
+        m("div", [
+          m("p.eyebrow", "Planner"),
+          m("h1.page-title", "Debt payoff planner"),
+          m("p.planner-header-copy", "Model the payoff path, compare outcomes, and keep the essentials visible.")
+        ])
       ]),
-      m(PaydownInfo),
-      payoffLoans.length === 0
-        ? m("section.panel.empty-state", [
-          m("h3", "Start with an account and a snapshot"),
-          m("p", "The charts and payoff projections appear once at least one account has a balance snapshot.")
-        ])
-        : m("section.panel", [
-          m("h3", "Balance History And Projection"),
-          m(PlotlyLineChart)
-        ]),
-      payoffLoans.length > 0
-        ? m("section.panel", [
-          m("h3", "Current Progress By Account"),
-          m(PlotlyBarChart)
-        ])
-        : null,
+      m(PlannerSummary),
+      m(PlannerChartPanel),
       m("div.dashboard-secondary-grid", [
         m(PayoffDates),
         m(AccountProjectionTable)

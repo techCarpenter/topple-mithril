@@ -12,16 +12,21 @@ const CONFIG = {
 const LAYOUT = {
   xaxis: {
     title: { text: "Account" },
-    color: "#f8f8f8"
+    color: "#d8e0e3",
+    gridcolor: "#2a3237",
+    zerolinecolor: "#2a3237"
   },
   yaxis: {
     title: { text: "Amount ($)" },
-    color: "#f8f8f8",
-    showline: true
+    color: "#d8e0e3",
+    showline: true,
+    gridcolor: "#2a3237",
+    zerolinecolor: "#2a3237"
   },
+  height: 340,
   font: {
     family: "Arial",
-    color: "#f8f8f8"
+    color: "#d8e0e3"
   },
   legend: {
     orientation: "h",
@@ -31,13 +36,13 @@ const LAYOUT = {
     xanchor: "center"
   },
   margin: {
-    t: 5,
-    r: 40,
-    b: 40,
-    l: 40
+    t: 10,
+    r: 20,
+    b: 36,
+    l: 44
   },
-  paper_bgcolor: "#222222",
-  plot_bgcolor: "#222222",
+  paper_bgcolor: "#1d2327",
+  plot_bgcolor: "#151a1d",
   datarevision: 0,
   barmode: "stack"
 };

@@ -11,12 +11,12 @@ const PayoffDates = {
       m("div.panel-header", [
         m("div", [
           m("p.eyebrow", "Timeline"),
-          m("h3", "Payoff Timeline")
+          m("h3", "Payoff timeline")
         ]),
-        m("p.section-copy", "See the expected payoff sequence and how the snowball grows over time.")
+        m("p.section-copy", "See the expected payoff order and how the snowball grows.")
       ]),
       payoffTimeline.length === 0
-        ? m("p.empty-copy", "Projected payoff dates appear here after you add account balances.")
+        ? m("p.empty-copy", "Projected payoff dates appear here after you add balances.")
         : m("ol.payoff-timeline", payoffTimeline.map((item) => (
           m("li.payoff-timeline-item", { key: item.id }, [
             m("div.timeline-order", `${item.order}`),

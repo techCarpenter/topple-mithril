@@ -35,14 +35,14 @@ function renderActiveView() {
 const App = {
   view: function () {
     return m("div.app-shell", [
-      m("section.hero-frame.app-masthead", [
-        m("div.hero-copy-block", [
+      m("section.panel.app-header", [
+        m("div.app-header-main", [
           m("p.eyebrow", "Topple"),
-          m("h1.primary-title", "Account Paydown Visualizer"),
-          m("p.hero-copy", "Build your payoff plan, keep balances current, and compare the impact of every extra dollar.")
+          m("h1.app-title", "Account Paydown Visualizer"),
+          m("p.app-subtitle", "Compact payoff planning with balances, projections, and scenario controls in one place.")
         ]),
-        m("div.hero-meta", [
-          m("p.hero-meta-label", "Views"),
+        m("div.app-header-meta", [
+          m("p.hero-meta-label", "Current view"),
           m("p.hero-meta-value", NAV_ITEMS.find((item) => item.id === state.activeView)?.label || "Planner")
         ])
       ]),

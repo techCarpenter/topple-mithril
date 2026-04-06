@@ -12,14 +12,18 @@ const CONFIG = {
 const LAYOUT = {
   xaxis: {
     title: { text: "Time" },
-    color: "#f8f8f8"
+    color: "#d8e0e3",
+    gridcolor: "#2a3237",
+    zerolinecolor: "#2a3237"
   },
   yaxis: {
     title: { text: "Amount ($)" },
-    color: "#f8f8f8",
-    showline: true
+    color: "#d8e0e3",
+    showline: true,
+    gridcolor: "#2a3237",
+    zerolinecolor: "#2a3237"
   },
-  height: 450,
+  height: 340,
   shapes: [
     {
       type: "line",
@@ -29,15 +33,14 @@ const LAYOUT = {
       yref: "paper",
       y1: 1,
       line: {
-        color: "#ff4646cc",
-        width: 1.5
+        color: "#ff8f7ccc",
+        width: 1
       }
     }
   ],
   font: {
     family: "Arial",
-    // size: 14,
-    color: "#f8f8f8"
+    color: "#d8e0e3"
   },
   legend: {
     orientation: "h",
@@ -47,13 +50,13 @@ const LAYOUT = {
     xanchor: "center"
   },
   margin: {
-    t: 5,
-    r: 40,
-    b: 40,
-    l: 40
+    t: 10,
+    r: 20,
+    b: 36,
+    l: 44
   },
-  paper_bgcolor: "#222222",
-  plot_bgcolor: "#222222",
+  paper_bgcolor: "#1d2327",
+  plot_bgcolor: "#151a1d",
   datarevision: 0
 };
 

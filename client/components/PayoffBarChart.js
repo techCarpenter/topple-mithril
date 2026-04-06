@@ -6,6 +6,14 @@ import { selectors, state } from "../state/index.js";
 
 let config = deepCopy(barChartConfig);
 
+function getChartHeight() {
+  if (typeof window !== "undefined" && window.matchMedia("(max-width: 719px)").matches) {
+    return 290;
+  }
+
+  return 340;
+}
+
 function plotChartData() {
   const payoffLoans = selectors.payoffLoans();
   const historicBalanceArray = selectors.historicBalanceArray();
@@ -13,6 +21,7 @@ function plotChartData() {
   let updatedChart = updateChart(payoffLoans, historicBalanceArray, paydownData, config);
   config.data = updatedChart.data;
   config.layout.datarevision = updatedChart.layout.datarevision;
+  config.layout.height = getChartHeight();
 
   Plotly.react("payff-bar-chart", config.data, config.layout, config.config);
 }
@@ -61,7 +70,7 @@ const updateChart = (accounts, historicBalanceArray, paydownData, chartConfig) =
           y: data.map(d => d.remaining),
           x: xTrace,
           name: "Balance",
-          color: "#dddddd",
+          color: "#97a4ab",
           text: formatBarData(data.map(d => d.remaining))
         })
       );
@@ -70,7 +79,7 @@ const updateChart = (accounts, historicBalanceArray, paydownData, chartConfig) =
           y: data.map(d => d.paid),
           x: xTrace,
           name: "Paid",
-          color: "limegreen",
+          color: "#79d492",
           text: formatBarData(data.map(d => d.paid)),
         })
       );
@@ -117,6 +126,12 @@ const PlotlyBarChart = {
   onupdate: () => {
     if (state.snapshots.length > 0) {
       plotChartData();
+    }
+  },
+  onremove: () => {
+    const graphElement = typeof document !== "undefined" ? document.getElementById("payff-bar-chart") : null;
+    if (graphElement) {
+      Plotly.purge(graphElement);
     }
   }
 }

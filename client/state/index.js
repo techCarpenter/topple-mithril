@@ -70,6 +70,8 @@ const State = () => ({
   notice: null,
   accountEditorVisible: false,
   snapshotEditorVisible: false,
+  plannerChartMode: "projection",
+  plannerDetailsExpanded: false,
   forms: {
     loan: createLoanForm(),
     snapshot: createSnapshotForm(),
@@ -593,6 +595,14 @@ const Actions = (state) => {
       if (Object.values(PAYDOWN_METHODS).includes(value)) {
         state.paydownMethod = value;
       }
+    },
+    setPlannerChartMode: (value) => {
+      if (value === "projection" || value === "progress") {
+        state.plannerChartMode = value;
+      }
+    },
+    setPlannerDetailsExpanded: (value) => {
+      state.plannerDetailsExpanded = Boolean(value);
     },
     updateForm: (formKey, field, value) => {
       state.forms[formKey][field] = value;

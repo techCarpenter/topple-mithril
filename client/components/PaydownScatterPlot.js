@@ -8,6 +8,14 @@ import { selectors, state } from "../state/index.js";
 
 let config = deepCopy(lineGraphConfig);
 
+function getChartHeight() {
+  if (typeof window !== "undefined" && window.matchMedia("(max-width: 719px)").matches) {
+    return 290;
+  }
+
+  return 340;
+}
+
 function plotChartData() {
   let now = new Date();
   config.layout.shapes[0].x0 = now;
@@ -19,7 +27,7 @@ function plotChartData() {
   let updatedChart = updateChart(payoffLoans, historicBalanceArray, paydownData, config);
   config.data = updatedChart.data;
   config.layout.datarevision = updatedChart.layout.datarevision;
-  config.layout.height = 450;
+  config.layout.height = getChartHeight();
 
   Plotly.react("plotly-chart", config.data, config.layout, config.config);
 }
@@ -106,6 +114,12 @@ const PlotlyLineChart = {
   onupdate: () => {
     if (state.snapshots.length > 0) {
       plotChartData();
+    }
+  },
+  onremove: () => {
+    const graphElement = typeof document !== "undefined" ? document.getElementById("plotly-chart") : null;
+    if (graphElement) {
+      Plotly.purge(graphElement);
     }
   }
 }
