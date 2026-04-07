@@ -1,0 +1,11 @@
+[Unit]
+Description=Topple SQLite backup
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=topple
+Group=topple
+WorkingDirectory=/srv/topple-mithril
+EnvironmentFile=/srv/topple-mithril/.env
+ExecStart=/srv/topple-mithril/scripts/backup-sqlite.sh

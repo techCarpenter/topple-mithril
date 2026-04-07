@@ -1,0 +1,10 @@
+[Unit]
+Description=Run Topple SQLite backups on a schedule
+
+[Timer]
+OnCalendar=*-*-* 02:15:00
+Persistent=true
+Unit=topple-backup.service
+
+[Install]
+WantedBy=timers.target
