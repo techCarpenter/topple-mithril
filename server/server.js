@@ -41,6 +41,11 @@ const fastify = Fastify({
   logger: envToLogger[process.env.NODE_ENV] ?? true
 });
 
+fastify.setErrorHandler((error, _request, reply) => {
+  const statusCode = error.validation ? 400 : (error.statusCode ?? 500);
+  return reply.code(statusCode).send({ msg: statusCode === 400 ? error.message : "The request could not be completed." });
+});
+
 async function main() {
   await fastify.register(fastifySwagger, {
     openapi: {

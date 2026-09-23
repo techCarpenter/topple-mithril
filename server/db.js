@@ -125,6 +125,77 @@ const MIGRATIONS = [
     apply: (database) => {
       migrateSnowballAdjustmentsTable(database);
     }
+  },
+  {
+    version: 4,
+    name: "store_calendar_dates",
+    apply: (database) => {
+      for (const table of ["snapshots", "extrapayments", "snowballadjustments"]) {
+        const rows = database.prepare(`SELECT id, date FROM ${table}`).all();
+        const update = database.prepare(`UPDATE ${table} SET date = @date WHERE id = @id`);
+        const transaction = database.transaction(items => items.forEach(row => {
+          const value = row.date;
+          if (typeof value === "number") {
+            const date = new Date(value);
+            update.run({ id: row.id, date: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}` });
+          } else if (typeof value === "string" && /^\d{10,13}$/.test(value)) {
+            const timestamp = Number(value) * (value.length === 10 ? 1000 : 1);
+            const date = new Date(timestamp);
+            update.run({ id: row.id, date: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}` });
+          } else if (typeof value === "string" && value.length > 10) {
+            update.run({ id: row.id, date: value.slice(0, 10) });
+          }
+        }));
+        transaction(rows);
+      }
+    }
+  },
+  {
+    version: 5,
+    name: "declare_calendar_dates_as_text",
+    apply: (database) => {
+      database.transaction(() => {
+        database.exec(`
+          ALTER TABLE snapshots RENAME TO snapshots_legacy_dates;
+          CREATE TABLE snapshots (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            account_id INTEGER NOT NULL,
+            date TEXT NOT NULL,
+            balance REAL NOT NULL,
+            FOREIGN KEY (user_id) REFERENCES users(id),
+            FOREIGN KEY (account_id) REFERENCES accounts(id)
+          );
+          INSERT INTO snapshots (id, user_id, account_id, date, balance)
+            SELECT id, user_id, account_id, date, balance FROM snapshots_legacy_dates;
+          DROP TABLE snapshots_legacy_dates;
+
+          ALTER TABLE extrapayments RENAME TO extrapayments_legacy_dates;
+          CREATE TABLE extrapayments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            date TEXT NOT NULL,
+            amount REAL NOT NULL,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+          );
+          INSERT INTO extrapayments (id, user_id, date, amount)
+            SELECT id, user_id, date, amount FROM extrapayments_legacy_dates;
+          DROP TABLE extrapayments_legacy_dates;
+
+          ALTER TABLE snowballadjustments RENAME TO snowballadjustments_legacy_dates;
+          CREATE TABLE snowballadjustments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            date TEXT NOT NULL,
+            amount REAL NOT NULL,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+          );
+          INSERT INTO snowballadjustments (id, user_id, date, amount)
+            SELECT id, user_id, date, amount FROM snowballadjustments_legacy_dates;
+          DROP TABLE snowballadjustments_legacy_dates;
+        `);
+      })();
+    }
   }
 ];
 

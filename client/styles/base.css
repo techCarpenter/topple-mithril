@@ -339,7 +339,6 @@ label span {
 .info-grid,
 .two-column-grid,
 .dashboard-secondary-grid,
-.planner-top-grid,
 .planner-kpi-grid,
 .planner-details-grid,
 .account-projection-metrics {
@@ -361,7 +360,6 @@ label span {
 }
 
 .dashboard-secondary-grid,
-.planner-top-grid,
 .planner-kpi-grid,
 .planner-details-grid,
 .account-projection-metrics {
@@ -394,9 +392,25 @@ label span {
   background: linear-gradient(180deg, rgba(17, 22, 25, 0.95) 0%, var(--card-color) 100%);
 }
 
+.planner-outlook {
+  overflow: hidden;
+}
+
+.planner-outlook .panel-header {
+  gap: 0.8rem 2rem;
+  margin-bottom: 1rem;
+}
+
+.planner-outlook .section-copy {
+  max-width: 34rem;
+}
+
 .planner-kpi-card {
-  padding: 0.9rem;
-  min-height: 120px;
+  display: flex;
+  min-width: 0;
+  min-height: 132px;
+  padding: 1rem;
+  flex-direction: column;
 }
 
 .planner-kpi-label {
@@ -407,15 +421,18 @@ label span {
 }
 
 .planner-kpi-value {
-  margin-top: 0.3rem;
+  margin-top: 0.45rem;
   font-size: clamp(1.25rem, 2.4vw, 1.8rem);
   line-height: 1.1;
+  overflow-wrap: anywhere;
 }
 
 .planner-kpi-note {
-  margin-top: 0.45rem;
+  margin-top: auto;
+  padding-top: 0.7rem;
   color: var(--muted-color);
   font-size: 0.9rem;
+  line-height: 1.35;
 }
 
 .planner-details-grid {
@@ -878,11 +895,6 @@ blockquote {
 
   .management-layout-wide {
     grid-template-columns: minmax(380px, 0.95fr) minmax(0, 1.1fr);
-  }
-
-  .planner-top-grid {
-    grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
-    align-items: start;
   }
 
   .planner-kpi-grid {

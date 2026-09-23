@@ -86,7 +86,7 @@ const ExtraPaymentManager = {
               ])),
               m("tbody", sortedExtraPayments.map((payment) => (
                 (() => {
-                  const paymentDate = dateStringFromDate(new Date(payment.date));
+                  const paymentDate = dateStringFromDate(payment.date instanceof Date ? payment.date : new Date(`${payment.date}T00:00:00`));
                   const isConfirmingDelete = state.deletePrompt?.resourceKey === "extraPayments" && state.deletePrompt.id === payment.id;
                   const isPendingDelete = state.pendingDelete?.resourceKey === "extraPayments" && state.pendingDelete.id === payment.id;
 

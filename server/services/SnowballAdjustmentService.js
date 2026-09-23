@@ -1,4 +1,5 @@
 import { db } from "../db.js";
+import { dateOnly } from "../dateOnly.js";
 
 const DEFAULT_USER_ID = 1;
 const SNOWBALL_ADJUSTMENT_COLUMNS = `
@@ -15,7 +16,7 @@ function toSnowballAdjustmentParams(snowballAdjustment) {
   return {
     id: snowballAdjustment.id,
     userId: DEFAULT_USER_ID,
-    date: snowballAdjustment.date,
+    date: dateOnly(snowballAdjustment.date),
     amount: snowballAdjustment.amount
   };
 }

@@ -6,8 +6,7 @@
 const PAYDOWN_METHODS = {
   avalanche: "avalanche",
   snowball: "snowball",
-  minPayments: "minPayments",
-  custom: "custom"
+  minPayments: "minPayments"
 };
 
 const PERCENT_TO_DECIMAL = 100;
@@ -41,107 +40,64 @@ function calculatePaydownSchedule(
   paydownMethod = PAYDOWN_METHODS.snowball,
   initSnowball = 0,
   oneTimePayments = [],
-  snowballAdjustments = []
+  snowballAdjustments = [],
+  asOfDate,
+  maxMonths = 1200
 ) {
-  // Input validation
-  if (!Array.isArray(loans) || loans.length === 0) {
-    throw new Error('Loans array is required and cannot be empty');
-  }
+  const failure = (message) => ({ paymentArray: [], totalInterestPaid: 0, totalPrincipalPaid: 0, totalPaid: 0, accountPayoffOrder: [], startDate: asOfDate, endDate: asOfDate, monthsLeft: 0, paydownMethod, startingSnowball: initSnowball, finalSnowball: initSnowball, errors: [message], startingBalances: [] });
+  if (!Array.isArray(loans) || loans.length === 0) return failure("Add at least one account with a balance observation.");
+  if (!(asOfDate instanceof Date) || Number.isNaN(asOfDate.getTime())) return failure("Choose a valid as-of date.");
+  if (!Number.isFinite(initSnowball) || initSnowball < 0 || !Number.isInteger(maxMonths) || maxMonths < 1 || maxMonths > 1200) return failure("Extra payments and projection horizon must be valid non-negative amounts and at most 1200 months.");
+  if (![PAYDOWN_METHODS.avalanche, PAYDOWN_METHODS.snowball, PAYDOWN_METHODS.minPayments].includes(paydownMethod)) return failure(`Invalid paydown method: ${paydownMethod}`);
+  const validLoan = loan => Number.isFinite(loan.balance) && loan.balance >= 0 && Number.isFinite(loan.apr) && loan.apr >= 0 && loan.apr <= 1000 && Number.isFinite(loan.minPayment) && loan.minPayment > 0 && loan.payoffStartDate instanceof Date && !Number.isNaN(loan.payoffStartDate.getTime());
+  if (loans.some(loan => !validLoan(loan) || roundCents(loan.minPayment) <= 0)) return failure("Loans need valid dates, non-negative balances, APRs from 0% to 1000%, and positive cent-level minimum payments.");
+  if (loans.some(loan => loan.payoffStartDate > asOfDate)) return failure("A balance observation is later than the projection as-of date.");
+  if ([...oneTimePayments, ...snowballAdjustments].some(item => !(item.date instanceof Date) || Number.isNaN(item.date.getTime()) || !Number.isFinite(item.amount) || item.amount < 0)) return failure("One-time payments and snowball adjustments need valid dates and non-negative amounts.");
+  if (loans.some(loan => loan.balance > 0 && loan.minPayment <= roundCents(loan.balance * loan.apr / APR_TO_MONTHLY_RATE_DIVISOR))) return failure("A minimum payment does not cover monthly interest; the balance will not amortize.");
 
-  if (initSnowball < 0) {
-    throw new Error('Initial snowball amount cannot be negative');
-  }
-
-  if (!Object.values(PAYDOWN_METHODS).includes(paydownMethod)) {
-    throw new Error(`Invalid paydown method: ${paydownMethod}`);
-  }
-
-  let /** @type {types.AccountPayoffDetail[]}*/ accountPayoffOrder = [],
-    /** @type {types.PayPeriodDetail[]} */ allPaymentData = [],
-    snowballAmount = 0,
-    /** @type {types.Loan[]} */ loansCopy = deepCopy(loans),
-    startDate = loansCopy.map(loan => loan.payoffStartDate).sort(dateSortAsc)[0],
-    currentYear = startDate.getFullYear(),
-    currentMonth = startDate.getMonth(),
-    monthsLeft = 0,
-    nowMonth = new Date().getMonth(),
-    nowYear = new Date().getFullYear();
-
+  let accountPayoffOrder = [], allPaymentData = [], snowballAmount = 0;
+  let loansCopy = deepCopy(loans).map(loan => ({ ...loan, balance: roundCents(loan.balance), minPayment: roundCents(loan.minPayment) }));
+  const startDate = new Date(Math.min(...loansCopy.map(loan => loan.payoffStartDate.getTime())));
+  let currentYear = startDate.getFullYear(), currentMonth = startDate.getMonth(), monthsLeft = 0;
+  const nowMonth = asOfDate.getMonth(), nowYear = asOfDate.getFullYear();
   loansCopy = prioritizeLoans(loansCopy, paydownMethod);
-
-  // Loop over each payment period
+  const startingBalances = loansCopy.map(loan => ({ id: loan.id, date: new Date(loan.payoffStartDate), balance: loan.balance }));
+  if (loansCopy.every(loan => loan.balance === 0)) {
+    return {
+      paymentArray: [{ date: startDate, payments: loansCopy.map(loan => ({ loanID: loan.id, balance: 0, interestPaid: 0, principalPaid: 0, totalPaid: 0 })) }],
+      totalInterestPaid: 0, totalPrincipalPaid: 0, totalPaid: 0,
+      accountPayoffOrder: loansCopy.map(loan => ({ id: loan.id, payoffDate: loan.payoffStartDate, newSnowball: 0 })),
+      startDate, endDate: startDate, monthsLeft: 0, paydownMethod, startingSnowball: initSnowball,
+      finalSnowball: initSnowball, errors: [], startingBalances, alreadyPaidOff: true
+    };
+  }
+  let periods = 0;
   do {
-    if (currentYear === nowYear && currentMonth === nowMonth) {
-      snowballAmount += initSnowball;
-    }
-
-    // console.log("snowballAdjustments", snowballAdjustments);
-
-    const currentMonthSnowballAdjustment = snowballAdjustments.find(change => {
-      const changeDate = new Date(change.date);
-      return changeDate.getFullYear() === currentYear && changeDate.getMonth() === currentMonth;
-    });
-
-    if (!!currentMonthSnowballAdjustment) {
-      snowballAmount += currentMonthSnowballAdjustment.amount;
-    }
-
-    if (isCurrentOrFutureMonth(currentMonth, currentYear, nowMonth, nowYear)) {
-      monthsLeft++;
-    }
-
-    let /** @type {number} */ extraPayment,
-      /** @type {types.PayPeriodDetail} */ currentPaymentObj;
-
-    // Calculate payments for current period
-    ({
-      loans: loansCopy,
-      extraPayment,
-      paymentObj: currentPaymentObj
-    } = calculateMonthlyPaymentDetails(loansCopy, currentMonth, currentYear));
-
-    // Apply extra payments
-    ({ loans: loansCopy, paymentObj: currentPaymentObj } = applyExtraPayments(
-      currentPaymentObj,
-      extraPayment,
-      snowballAmount,
-      paydownMethod,
-      startDate,
-      loansCopy,
-      oneTimePayments
-    ));
-
-    let reprioritizeLoans = false;
-
-    // Remove paid-off loans and add to snowball
+    if (periods >= maxMonths) return { ...failure(`Projection exceeded its ${maxMonths}-month horizon.`), paymentArray: allPaymentData, accountPayoffOrder, startDate, monthsLeft, startingBalances };
+    periods++;
+    if (currentYear === nowYear && currentMonth === nowMonth) snowballAmount += initSnowball;
+    const currentMonthSnowballAdjustments = snowballAdjustments.filter(change => change.date.getFullYear() === currentYear && change.date.getMonth() === currentMonth);
+    snowballAmount = roundCents(snowballAmount + currentMonthSnowballAdjustments.reduce((sum, change) => sum + change.amount, 0));
+    if (isCurrentOrFutureMonth(currentMonth, currentYear, nowMonth, nowYear)) monthsLeft++;
+    let extraPayment, currentPaymentObj;
+    ({ loans: loansCopy, extraPayment, paymentObj: currentPaymentObj } = calculateMonthlyPaymentDetails(loansCopy, currentMonth, currentYear));
+    ({ loans: loansCopy, paymentObj: currentPaymentObj } = applyExtraPayments(currentPaymentObj, extraPayment, snowballAmount, paydownMethod, startDate, loansCopy, oneTimePayments));
     loansCopy = loansCopy.filter(loan => {
       if (loan.balance <= 0) {
-        snowballAmount += loan.minPayment;
-        accountPayoffOrder.push({
-          id: loan.id,
-          payoffDate: currentPaymentObj.date,
-          newSnowball: snowballAmount
-        });
-        reprioritizeLoans = true;
+        snowballAmount = roundCents(snowballAmount + loan.minPayment);
+        accountPayoffOrder.push({ id: loan.id, payoffDate: currentPaymentObj.date, newSnowball: snowballAmount });
         return false;
       }
       return true;
     });
-
-    if (reprioritizeLoans) {
-      loansCopy = prioritizeLoans(loansCopy, paydownMethod);
-      reprioritizeLoans = false;
-    }
-
+    loansCopy = prioritizeLoans(loansCopy, paydownMethod);
     allPaymentData.push(currentPaymentObj);
-
-    // Move to next payment period
     ({ currentMonth, currentYear } = getNextMonthYear(currentMonth, currentYear));
   } while (loansCopy.length > 0);
 
-  const totalInterestPaid = getTotalInterestPaid(allPaymentData);
-  const totalPrincipalPaid = getTotalPrincipalPaid(allPaymentData);
-  const totalPaid = totalInterestPaid + totalPrincipalPaid;
+  const totalInterestPaid = roundCents(getTotalInterestPaid(allPaymentData));
+  const totalPrincipalPaid = roundCents(getTotalPrincipalPaid(allPaymentData));
+  const totalPaid = roundCents(totalInterestPaid + totalPrincipalPaid);
 
   return {
     paymentArray: allPaymentData,
@@ -154,9 +110,12 @@ function calculatePaydownSchedule(
     monthsLeft,
     paydownMethod,
     startingSnowball: initSnowball,
-    finalSnowball: snowballAmount
+    finalSnowball: snowballAmount,
+    errors: [], startingBalances, alreadyPaidOff: false
   };
 }
+
+function roundCents(amount) { return Math.round((amount + Number.EPSILON) * 100) / 100; }
 
 /**
  * Checks if the given month/year is current or future relative to now
@@ -273,8 +232,8 @@ function getTotalPrincipalPaid(allPaymentData) {
  * @returns {Object} Object with curMonthInterest and curMonthPrincipal
  */
 function calculateInterestAndPrincipal(loan, ratePerMonth) {
-  const curMonthInterest = loan.balance * (1 + ratePerMonth) - loan.balance;
-  const curMonthPrincipal = loan.minPayment - curMonthInterest;
+  const curMonthInterest = roundCents(loan.balance * ratePerMonth);
+  const curMonthPrincipal = roundCents(loan.minPayment - curMonthInterest);
   return { curMonthInterest, curMonthPrincipal };
 }
 
@@ -305,28 +264,25 @@ function applyExtraPayments(
   const currentYear = paymentObj.date.getFullYear();
 
   // Check for one-time payments this month
-  const oneTimePayment = oneTimePayments.find(pmnt => {
+  const oneTimePayment = oneTimePayments.filter(pmnt => {
     const paymentDate = new Date(pmnt.date);
     return paymentDate.getMonth() === currentMonth &&
       paymentDate.getFullYear() === currentYear;
   });
 
-  if (oneTimePayment) {
-    extraPayment += oneTimePayment.amount;
-  }
+  extraPayment = roundCents(extraPayment + oneTimePayment.reduce((sum, payment) => sum + payment.amount, 0));
 
   if (!shouldApplyExtraPayments(paymentObj, extraPayment, snowballAmount, paydownMethod, startDate)) {
     return { loans, paymentObj };
   }
 
-  let paymentIndex = paymentObj.payments.length - 1;
+  let paymentIndex = 0;
   let /** @type {number} */ remainingExtraPayment = parseFloat((extraPayment + snowballAmount).toFixed(2));
 
-  while (remainingExtraPayment > 0 && !isLastLoanPaidOff(paymentObj.payments, paymentIndex)) {
+  while (remainingExtraPayment > 0) {
     // Skip to next unpaid loan
-    while (paymentObj.payments[paymentIndex].balance <= 0 && paymentIndex > 0) {
-      paymentIndex--;
-    }
+    while (paymentIndex < paymentObj.payments.length && paymentObj.payments[paymentIndex].balance <= 0) paymentIndex++;
+    if (paymentIndex >= paymentObj.payments.length) break;
 
     const /** @type {types.PaymentDetail} */ topAccount = paymentObj.payments[paymentIndex];
 
@@ -336,7 +292,7 @@ function applyExtraPayments(
       topAccount.principalPaid += paymentToApply;
       topAccount.totalPaid += paymentToApply;
       topAccount.balance -= paymentToApply;
-      remainingExtraPayment -= paymentToApply;
+      remainingExtraPayment = roundCents(remainingExtraPayment - paymentToApply);
 
       // Update corresponding loan balance
       const loanIndex = loans.findIndex(l => l.id === topAccount.loanID);
@@ -355,10 +311,6 @@ function applyExtraPayments(
  * @param {number} paymentIndex Current payment index
  * @returns {boolean} True if last loan is paid off and at index 0
  */
-function isLastLoanPaidOff(payments, paymentIndex) {
-  return payments[paymentIndex].balance === 0 && paymentIndex === 0;
-}
-
 /**
  * Calculates the next month and year
  * @param {number} currentMonth Current month (0-11)
@@ -424,7 +376,7 @@ function calculateMonthlyPaymentDetails(loans, currentMonth, currentYear) {
       paymentDetails.loanID = loan.id;
       paymentDetails.balance = futureBalance;
       paymentDetails.interestPaid = parseFloat(curMonthInterest.toFixed(2));
-      paymentDetails.principalPaid = parseFloat((curMonthPrincipal + Math.min(0, futureBalance)).toFixed(2));
+      paymentDetails.principalPaid = roundCents(Math.min(loan.balance, curMonthPrincipal));
       paymentDetails.totalPaid = parseFloat((paymentDetails.interestPaid + paymentDetails.principalPaid).toFixed(2));
 
       loan.balance = futureBalance;
@@ -476,38 +428,10 @@ function prioritizeLoans(loanArray, paymentMethod = PAYDOWN_METHODS.minPayments)
 
   // Order by increasing interest rate, then decreasing balance
   if (paymentMethod === PAYDOWN_METHODS.avalanche) {
-    loanArrayCopy.sort((loan1, loan2) => {
-      if (loan1.apr < loan2.apr) {
-        return -1;
-      } else if (loan1.apr > loan2.apr) {
-        return 1;
-      } else {
-        // If APRs are equal, sort by decreasing balance
-        if (loan1.balance > loan2.balance) {
-          return -1;
-        } else if (loan1.balance < loan2.balance) {
-          return 1;
-        }
-        return 0;
-      }
-    });
+    loanArrayCopy.sort((loan1, loan2) => loan2.apr - loan1.apr || loan1.balance - loan2.balance || loan1.id - loan2.id);
   // Order by decreasing balance, then increasing
   } else if (paymentMethod === PAYDOWN_METHODS.snowball) {
-    loanArrayCopy.sort((loan1, loan2) => {
-      if (loan1.balance > loan2.balance) {
-        return -1;
-      } else if (loan1.balance < loan2.balance) {
-        return 1;
-      } else {
-        // If balances are equal, prioritize higher APR
-        if (loan1.apr < loan2.apr) {
-          return -1;
-        } else if (loan1.apr > loan2.apr) {
-          return 1;
-        }
-        return 0;
-      }
-    });
+    loanArrayCopy.sort((loan1, loan2) => loan1.balance - loan2.balance || loan2.apr - loan1.apr || loan1.id - loan2.id);
   }
   // console.log(loanArrayCopy);
   return loanArrayCopy;
@@ -613,18 +537,24 @@ function dateFormat(date) {
  * @returns {Date} Corresponding Date object
  */
 function dateFromString(dateString) {
+  if (dateString instanceof Date) return new Date(dateString.getTime());
+  if (typeof dateString === "number") return new Date(dateString);
   const [year, month, day] = dateString.split("-");
-  return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+  const date = new Date(0);
+  date.setFullYear(parseInt(year), parseInt(month) - 1, parseInt(day));
+  date.setHours(0, 0, 0, 0);
+  return date;
 }
 
 /**
  * Calculates the current total balance across all loans
  * @param {types.PaydownDataDetail} paydownData Paydown calculation results
+ * @param {Date} asOfDate Local date used for the projection
  * @returns {number} Current total balance, or 0 if no current payment found
  */
-function currentBalance(paydownData) {
-  const currentYear = new Date().getFullYear();
-  const currentMonth = new Date().getMonth();
+function currentBalance(paydownData, asOfDate) {
+  const currentYear = asOfDate.getFullYear();
+  const currentMonth = asOfDate.getMonth();
 
   const currentPayment = paydownData.paymentArray
     .find(pmt =>

@@ -71,6 +71,25 @@ const App = {
         : renderActiveView()
     ]);
   },
+  oncreate: (vnode) => {
+    const refresh = () => {
+      clearTimeout(vnode.state.dateTimer);
+      m.redraw();
+      const now = new Date();
+      const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+      vnode.state.dateTimer = setTimeout(refresh, midnight.getTime() - now.getTime());
+    };
+    const onVisible = () => { if (!document.hidden) refresh(); };
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", onVisible);
+    vnode.state.stopDateRefresh = () => {
+      clearTimeout(vnode.state.dateTimer);
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+    refresh();
+  },
+  onremove: (vnode) => vnode.state.stopDateRefresh(),
   oninit: () => {
     void actions.initialize();
   }

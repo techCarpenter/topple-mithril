@@ -6,9 +6,11 @@ const errorSchema = {
   }
 };
 
-const timestampSchema = {
-  type: "integer",
-  description: "Unix timestamp in milliseconds"
+const dateSchema = {
+  type: "string",
+  format: "date",
+  pattern: "^\\d{4}-\\d{2}-\\d{2}$",
+  description: "Local calendar date in YYYY-MM-DD format"
 };
 
 const idParamSchema = {
@@ -25,10 +27,10 @@ const loanSchema = {
   properties: {
     id: { type: "integer" },
     userId: { type: "integer" },
-    name: { type: "string" },
-    provider: { type: "string" },
-    apr: { type: "number" },
-    minPayment: { type: "number" }
+    name: { type: "string", minLength: 1, maxLength: 120 },
+    provider: { type: "string", maxLength: 120 },
+    apr: { type: "number", minimum: 0, maximum: 1000 },
+    minPayment: { type: "number", exclusiveMinimum: 0 }
   }
 };
 
@@ -36,10 +38,10 @@ const loanInputSchema = {
   type: "object",
   required: ["name", "apr", "minPayment"],
   properties: {
-    name: { type: "string" },
-    provider: { type: "string" },
-    apr: { type: "number" },
-    minPayment: { type: "number" }
+    name: { type: "string", minLength: 1, maxLength: 120 },
+    provider: { type: "string", maxLength: 120 },
+    apr: { type: "number", minimum: 0, maximum: 1000 },
+    minPayment: { type: "number", exclusiveMinimum: 0 }
   }
 };
 
@@ -108,9 +110,9 @@ const snapshotSchema = {
   properties: {
     id: { type: "integer" },
     userId: { type: "integer" },
-    accountId: { type: "integer" },
-    date: timestampSchema,
-    balance: { type: "number" }
+    accountId: { type: "integer", minimum: 1 },
+    date: dateSchema,
+    balance: { type: "number", minimum: 0 }
   }
 };
 
@@ -118,9 +120,9 @@ const snapshotInputSchema = {
   type: "object",
   required: ["accountId", "date", "balance"],
   properties: {
-    accountId: { type: "integer" },
-    date: timestampSchema,
-    balance: { type: "number" }
+    accountId: { type: "integer", minimum: 1 },
+    date: dateSchema,
+    balance: { type: "number", minimum: 0 }
   }
 };
 
@@ -153,8 +155,8 @@ const extraPaymentSchema = {
   properties: {
     id: { type: "integer" },
     userId: { type: "integer" },
-    date: timestampSchema,
-    amount: { type: "number" }
+    date: dateSchema,
+    amount: { type: "number", minimum: 0 }
   }
 };
 
@@ -162,8 +164,8 @@ const extraPaymentInputSchema = {
   type: "object",
   required: ["date", "amount"],
   properties: {
-    date: timestampSchema,
-    amount: { type: "number" }
+    date: dateSchema,
+    amount: { type: "number", minimum: 0 }
   }
 };
 
@@ -196,8 +198,8 @@ const snowballAdjustmentSchema = {
   properties: {
     id: { type: "integer" },
     userId: { type: "integer" },
-    date: timestampSchema,
-    amount: { type: "number" }
+    date: dateSchema,
+    amount: { type: "number", minimum: 0 }
   }
 };
 
@@ -205,8 +207,8 @@ const snowballAdjustmentInputSchema = {
   type: "object",
   required: ["date", "amount"],
   properties: {
-    date: timestampSchema,
-    amount: { type: "number" }
+    date: dateSchema,
+    amount: { type: "number", minimum: 0 }
   }
 };
 
@@ -257,7 +259,7 @@ export {
   snowballAdjustmentInputSchema,
   snowballAdjustmentListSchema,
   snowballAdjustmentSchema,
-  timestampSchema,
+  dateSchema,
   userListSchema,
   userSchema
 };

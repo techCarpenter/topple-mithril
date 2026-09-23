@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS snapshots (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL,
   account_id INTEGER NOT NULL,
-  date INTEGER NOT NULL,
+  date TEXT NOT NULL,
   balance REAL NOT NULL,
   FOREIGN KEY (user_id) REFERENCES users(id),
   FOREIGN KEY (account_id) REFERENCES accounts(id)
@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS snapshots (
 CREATE TABLE IF NOT EXISTS extrapayments (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL,
-  date INTEGER NOT NULL,
+  date TEXT NOT NULL,
   amount REAL NOT NULL,
   FOREIGN KEY (user_id) REFERENCES users(id)
 );
@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS extrapayments (
 CREATE TABLE IF NOT EXISTS snowballadjustments (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL,
-  date INTEGER NOT NULL,
+  date TEXT NOT NULL,
   amount REAL NOT NULL,
   FOREIGN KEY (user_id) REFERENCES users(id)
 );

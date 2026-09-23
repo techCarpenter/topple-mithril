@@ -11,7 +11,7 @@ function groupSnapshotsByDate(snapshots, accountLookup) {
   const groups = new Map();
 
   for (const snapshot of snapshots) {
-    const date = dateStringFromDate(new Date(snapshot.date));
+    const date = dateStringFromDate(snapshot.date instanceof Date ? snapshot.date : new Date(`${snapshot.date}T00:00:00`));
 
     if (!groups.has(date)) {
       groups.set(date, {
@@ -32,7 +32,11 @@ function groupSnapshotsByDate(snapshots, accountLookup) {
   }
 
   return Array.from(groups.values())
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .sort((a, b) => {
+      const aTime = a.date instanceof Date ? a.date.getTime() : new Date(`${a.date}T00:00:00`).getTime();
+      const bTime = b.date instanceof Date ? b.date.getTime() : new Date(`${b.date}T00:00:00`).getTime();
+      return bTime - aTime;
+    })
     .map((group) => ({
       ...group,
       entries: group.entries.sort((a, b) => a.accountName.localeCompare(b.accountName))
@@ -58,7 +62,7 @@ const SnapshotManager = {
     const snapshotGroups = groupSnapshotsByDate(state.snapshots, accountLookup);
     const currentBatchSnapshots = new Map(
       state.snapshots
-        .filter((snapshot) => dateStringFromDate(new Date(snapshot.date)) === state.forms.snapshot.date)
+        .filter((snapshot) => dateStringFromDate(snapshot.date instanceof Date ? snapshot.date : new Date(`${snapshot.date}T00:00:00`)) === state.forms.snapshot.date)
         .map((snapshot) => [String(snapshot.accountId), snapshot])
     );
 

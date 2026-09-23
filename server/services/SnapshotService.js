@@ -1,5 +1,6 @@
 /** @import * as types from "../types.js" */
 import { db } from "../db.js";
+import { dateOnly } from "../dateOnly.js";
 
 const DEFAULT_USER_ID = 1;
 const SNAPSHOT_COLUMNS = `
@@ -18,7 +19,7 @@ function toSnapshotParams(snapshot) {
     id: snapshot.id,
     userId: DEFAULT_USER_ID,
     accountId: snapshot.accountId,
-    date: snapshot.date,
+    date: dateOnly(snapshot.date),
     balance: snapshot.balance
   };
 }

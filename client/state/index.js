@@ -1,5 +1,5 @@
 import m from "mithril";
-import { dateStringFromDate, PAYDOWN_METHODS } from "../paydownData.js";
+import { dateFromString, dateStringFromDate, PAYDOWN_METHODS } from "../paydownData.js";
 import { Selectors } from "../selectors.js";
 
 function createLoanForm() {
@@ -124,7 +124,7 @@ function normalizeErrorMessage(error, fallbackMessage) {
 }
 
 function snapshotDateKey(dateValue) {
-  return dateStringFromDate(new Date(dateValue));
+  return dateStringFromDate(dateFromString(dateValue));
 }
 
 /**
@@ -244,13 +244,13 @@ const Actions = (state) => {
         break;
       case "extraPayments":
         state.forms.extraPayment = {
-          date: dateStringFromDate(new Date(record.date)),
+          date: dateStringFromDate(dateFromString(record.date)),
           amount: String(record.amount ?? "")
         };
         break;
       case "snowballAdjustments":
         state.forms.snowballAdjustment = {
-          date: dateStringFromDate(new Date(record.date)),
+          date: dateStringFromDate(dateFromString(record.date)),
           amount: String(record.amount ?? "")
         };
         break;
@@ -273,7 +273,9 @@ const Actions = (state) => {
 
     try {
       const data = await requestJson(endpoint);
-      state[resourceKey] = Array.isArray(data) ? data : [];
+      state[resourceKey] = Array.isArray(data)
+        ? data.map(record => ({ ...record, ...(record.date !== undefined ? { date: dateFromString(record.date) } : {}) }))
+        : [];
 
       if (resourceKey === "loans") {
         syncSnapshotFormWithLoans();
@@ -361,7 +363,7 @@ const Actions = (state) => {
   }
 
   function toTimestamp(dateString) {
-    return new Date(`${dateString}T00:00:00`).getTime();
+    return dateString;
   }
 
   function buildPayload(resourceKey) {

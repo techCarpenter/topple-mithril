@@ -32,7 +32,7 @@ function buildPlannerMetrics() {
   const paydownData = selectors.paydownData();
   const baselinePaydownData = selectors.baselinePaydownData();
   const comparison = selectors.paydownComparison();
-  const hasPaydownData = paydownData.paymentArray.length > 0;
+  const hasPaydownData = !paydownData.errors?.length && paydownData.paymentArray.length > 0;
   const initialBalances = balanceSnapshots
     .map((snapshot) => snapshot.balances)
     .flat()
@@ -48,9 +48,9 @@ function buildPlannerMetrics() {
   return {
     primaryMetrics: [
       {
-        label: "Current Balance",
+        label: "Estimated balance this month",
         value: hasPaydownData ? currencyFormat(comparison.currentBalance) : "Not available",
-        note: hasPaydownData ? `${percentFormat(progress, 1)} paid down` : "Add a snapshot to show balances"
+        note: hasPaydownData ? `${percentFormat(progress, 1)} estimated paid down` : "Add a snapshot to show balances"
       },
       {
         label: "Projected Payoff",
@@ -91,23 +91,21 @@ const PlannerSummary = {
     const { primaryMetrics, secondaryMetrics } = buildPlannerMetrics();
 
     return m("section.stack-md", [
-      m("div.planner-top-grid", [
-        m("section.panel", [
-          m("div.panel-header.panel-header-tight", [
-            m("div", [
-              m("p.eyebrow", "Snapshot"),
-              m("h2.section-title", "Today's outlook")
-            ]),
-            m("p.section-copy", "Four key numbers stay visible while you explore the plan.")
+      m("section.panel.planner-outlook", [
+        m("div.panel-header.panel-header-tight", [
+          m("div", [
+            m("p.eyebrow", "Snapshot"),
+            m("h2.section-title", "Today's outlook")
           ]),
-          m("div.planner-kpi-grid", primaryMetrics.map((metric) => (
-            m("article.planner-kpi-card", { key: metric.label }, [
-              m("p.planner-kpi-label", metric.label),
-              m("p.planner-kpi-value", metric.value),
-              m("p.planner-kpi-note", metric.note)
-            ])
-          )))
-        ])
+          m("p.section-copy", "Four key numbers stay visible while you explore the plan.")
+        ]),
+        m("div.planner-kpi-grid", primaryMetrics.map((metric) => (
+          m("article.planner-kpi-card", { key: metric.label }, [
+            m("p.planner-kpi-label", metric.label),
+            m("p.planner-kpi-value", metric.value),
+            m("p.planner-kpi-note", metric.note)
+          ])
+        )))
       ]),
       m("section.panel", [
         m("div.panel-header.panel-header-tight", [

@@ -13,7 +13,7 @@ function buildSummaryItems() {
   const paydownData = selectors.paydownData();
   const baselinePaydownData = selectors.baselinePaydownData();
   const comparison = selectors.paydownComparison();
-  const hasPaydownData = paydownData.paymentArray.length > 0;
+  const hasPaydownData = !paydownData.errors?.length && paydownData.paymentArray.length > 0;
   const initialBalances = balanceSnapshots
     .map((snapshot) => snapshot.balances)
     .flat()
@@ -29,7 +29,7 @@ function buildSummaryItems() {
   return [
     { title: `Progress (${percentFormat(progress, 1)})`, value: progress, kind: "progress" },
     { title: "Starting Balance", value: currencyFormat(startingBalance) },
-    { title: "Current Balance", value: currencyFormat(comparison.currentBalance) },
+    { title: "Estimated balance this month", value: currencyFormat(comparison.currentBalance) },
     { title: "Projected Payoff", value: hasPaydownData ? dateFormat(paydownData.endDate) : "Not available" },
     {
       title: "Time Remaining",

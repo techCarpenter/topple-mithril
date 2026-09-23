@@ -10,6 +10,7 @@
     "client-dev": "parcel index.html --no-cache --port 8080 --open",
     "client-build": "parcel build index.html",
     "build": "parcel build index.html",
+    "test": "node --test client/paydownData.test.js client/selectors.test.js server/api.test.js",
     "seed-dev-db": "node scripts/seed-dev-db.js",
     "server-dev": "nodemon --env-file=.env --watch server --ext js,json,html,css server/server.js",
     "dev": "concurrently \"npm run server-dev\" \"npm run client-dev\"",

@@ -1,4 +1,5 @@
 import { db } from "../db.js";
+import { dateOnly } from "../dateOnly.js";
 
 const DEFAULT_USER_ID = 1;
 const EXTRA_PAYMENT_COLUMNS = `
@@ -15,7 +16,7 @@ function toExtraPaymentParams(extraPayment) {
   return {
     id: extraPayment.id,
     userId: DEFAULT_USER_ID,
-    date: extraPayment.date,
+    date: dateOnly(extraPayment.date),
     amount: extraPayment.amount
   };
 }

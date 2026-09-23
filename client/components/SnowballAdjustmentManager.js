@@ -85,7 +85,7 @@ const SnowballAdjustmentManager = {
               ])),
               m("tbody", sortedAdjustments.map((adjustment) => (
                 (() => {
-                  const adjustmentDate = dateStringFromDate(new Date(adjustment.date));
+                  const adjustmentDate = dateStringFromDate(adjustment.date instanceof Date ? adjustment.date : new Date(`${adjustment.date}T00:00:00`));
                   const isConfirmingDelete = state.deletePrompt?.resourceKey === "snowballAdjustments" && state.deletePrompt.id === adjustment.id;
                   const isPendingDelete = state.pendingDelete?.resourceKey === "snowballAdjustments" && state.pendingDelete.id === adjustment.id;
 

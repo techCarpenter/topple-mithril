@@ -1,6 +1,6 @@
 /** @import * as types from "./types" */
 
-import { calculatePaydownSchedule, currentBalance, getHistoricBalanceData, PAYDOWN_METHODS } from "./paydownData.js";
+import { calculatePaydownSchedule, currentBalance, dateFromString, dateStringFromDate, getHistoricBalanceData, PAYDOWN_METHODS } from "./paydownData.js";
 
 function createMemoizedSelector(projector) {
   let lastArgs = null;
@@ -21,19 +21,21 @@ function createMemoizedSelector(projector) {
   };
 }
 
-function createEmptyPaydownData(paydownMethod = PAYDOWN_METHODS.snowball) {
+function createEmptyPaydownData(paydownMethod, asOfDate) {
   return {
     paymentArray: [],
     totalInterestPaid: 0,
     totalPrincipalPaid: 0,
     totalPaid: 0,
     accountPayoffOrder: [],
-    startDate: new Date(),
-    endDate: new Date(),
+    startDate: asOfDate,
+    endDate: asOfDate,
     monthsLeft: 0,
     paydownMethod,
     startingSnowball: 0,
-    finalSnowball: 0
+    finalSnowball: 0,
+    errors: [],
+    startingBalances: []
   };
 }
 
@@ -42,7 +44,8 @@ const selectBalanceSnapshots = createMemoizedSelector((snapshots) => {
   const groupedSnapshots = new Map();
 
   for (const snapshot of snapshots) {
-    const snapshotDate = groupedSnapshots.get(snapshot.date);
+    const key = dateStringFromDate(dateFromString(snapshot.date));
+    const snapshotDate = groupedSnapshots.get(key);
 
     if (snapshotDate) {
       snapshotDate.balances.push({
@@ -52,8 +55,8 @@ const selectBalanceSnapshots = createMemoizedSelector((snapshots) => {
       continue;
     }
 
-    groupedSnapshots.set(snapshot.date, {
-      date: new Date(snapshot.date),
+    groupedSnapshots.set(key, {
+      date: dateFromString(snapshot.date),
       balances: [
         {
           loanID: snapshot.accountId,
@@ -64,7 +67,7 @@ const selectBalanceSnapshots = createMemoizedSelector((snapshots) => {
   }
 
   return Array.from(groupedSnapshots.entries())
-    .sort((a, b) => a[0] - b[0])
+    .sort((a, b) => a[0].localeCompare(b[0]))
     .map(([, snapshot]) => snapshot);
 });
 
@@ -90,8 +93,8 @@ const selectPayoffLoans = createMemoizedSelector((loans, snapshots) => {
     payoffLoans.push({
       ...loan,
       balance: latestSnapshot.balance,
-      payoffStartDate: new Date(latestSnapshot.date),
-      lastSnapshot: new Date(latestSnapshot.date)
+      payoffStartDate: dateFromString(latestSnapshot.date),
+      lastSnapshot: dateFromString(latestSnapshot.date)
     });
 
     return payoffLoans;
@@ -102,9 +105,9 @@ const selectHistoricBalanceArray = createMemoizedSelector((balanceSnapshots) => 
   return getHistoricBalanceData(balanceSnapshots);
 });
 
-const selectPaydownData = createMemoizedSelector((payoffLoans, paydownMethod, snowball, extraPayments, snowballAdjustments) => {
+const selectPaydownData = createMemoizedSelector((payoffLoans, paydownMethod, snowball, extraPayments, snowballAdjustments, asOfDate) => {
   if (payoffLoans.length === 0) {
-    return createEmptyPaydownData(paydownMethod);
+    return createEmptyPaydownData(paydownMethod, asOfDate);
   }
 
   return calculatePaydownSchedule(
@@ -112,13 +115,14 @@ const selectPaydownData = createMemoizedSelector((payoffLoans, paydownMethod, sn
     paydownMethod,
     snowball || 0,
     extraPayments,
-    snowballAdjustments
+    snowballAdjustments,
+    asOfDate
   );
 });
 
-const selectBaselinePaydownData = createMemoizedSelector((payoffLoans) => {
+const selectBaselinePaydownData = createMemoizedSelector((payoffLoans, asOfDate) => {
   if (payoffLoans.length === 0) {
-    return createEmptyPaydownData(PAYDOWN_METHODS.minPayments);
+    return createEmptyPaydownData(PAYDOWN_METHODS.minPayments, asOfDate);
   }
 
   return calculatePaydownSchedule(
@@ -126,7 +130,8 @@ const selectBaselinePaydownData = createMemoizedSelector((payoffLoans) => {
     PAYDOWN_METHODS.minPayments,
     0,
     [],
-    []
+    [],
+    asOfDate
   );
 });
 
@@ -142,16 +147,15 @@ const selectPayoffTimeline = createMemoizedSelector((payoffLoans, paydownData) =
   }));
 });
 
-const selectAccountProjectionRows = createMemoizedSelector((payoffLoans, paydownData) => {
+const selectAccountProjectionRows = createMemoizedSelector((payoffLoans, paydownData, asOfDate) => {
   const payoffById = new Map(
     paydownData.accountPayoffOrder.map(entry => [String(entry.id), entry])
   );
   const currentMonthBalance = new Map();
 
   const currentPeriod = paydownData.paymentArray.find(paymentPeriod => {
-    const now = new Date();
-    return paymentPeriod.date.getFullYear() === now.getFullYear() &&
-      paymentPeriod.date.getMonth() === now.getMonth();
+    return paymentPeriod.date.getFullYear() === asOfDate.getFullYear() &&
+      paymentPeriod.date.getMonth() === asOfDate.getMonth();
   });
 
   if (currentPeriod) {
@@ -166,65 +170,53 @@ const selectAccountProjectionRows = createMemoizedSelector((payoffLoans, paydown
     provider: loan.provider,
     apr: loan.apr,
     minPayment: loan.minPayment,
-    currentBalance: currentMonthBalance.get(String(loan.id)) ?? loan.balance ?? 0,
+    lastSnapshot: loan.lastSnapshot,
+    recordedBalance: loan.balance,
+    estimatedBalance: paydownData.errors?.length ? null : (
+      currentMonthBalance.get(String(loan.id)) ??
+      (payoffById.get(String(loan.id))?.payoffDate <= asOfDate ? 0 : null)
+    ),
     projectedPayoffDate: payoffById.get(String(loan.id))?.payoffDate ?? null
   }));
 });
 
-const selectPaydownComparison = createMemoizedSelector((paydownData, baselinePaydownData) => ({
-  currentBalance: currentBalance(paydownData),
+const selectPaydownComparison = createMemoizedSelector((paydownData, baselinePaydownData, asOfDate) => ({
+  currentBalance: currentBalance(paydownData, asOfDate),
   interestSaved: baselinePaydownData.totalInterestPaid - paydownData.totalInterestPaid,
   totalSaved: baselinePaydownData.totalPaid - paydownData.totalPaid,
   monthsSaved: baselinePaydownData.monthsLeft - paydownData.monthsLeft
 }));
 
-function Selectors(state) {
+function Selectors(state, clock = () => new Date()) {
+  let cachedAsOfDate;
+  function getAsOfDate() {
+    const today = dateFromString(dateStringFromDate(clock()));
+    if (!cachedAsOfDate || today.getTime() !== cachedAsOfDate.getTime()) cachedAsOfDate = today;
+    return cachedAsOfDate;
+  }
+  const payoffLoans = () => selectPayoffLoans(state.loans, state.snapshots);
+  const paydownData = (asOfDate = getAsOfDate()) => selectPaydownData(
+    payoffLoans(), state.paydownMethod, state.snowball, state.extraPayments,
+    state.snowballAdjustments, asOfDate
+  );
+  const baselinePaydownData = (asOfDate = getAsOfDate()) => selectBaselinePaydownData(payoffLoans(), asOfDate);
+
   return {
+    asOfDate: getAsOfDate,
     balanceSnapshots: () => selectBalanceSnapshots(state.snapshots),
     historicBalanceArray: () => selectHistoricBalanceArray(selectBalanceSnapshots(state.snapshots)),
-    payoffLoans: () => selectPayoffLoans(state.loans, state.snapshots),
-    paydownData: () => selectPaydownData(
-      selectPayoffLoans(state.loans, state.snapshots),
-      state.paydownMethod,
-      state.snowball,
-      state.extraPayments,
-      state.snowballAdjustments
-    ),
-    baselinePaydownData: () => selectBaselinePaydownData(
-      selectPayoffLoans(state.loans, state.snapshots)
-    ),
-    payoffTimeline: () => selectPayoffTimeline(
-      selectPayoffLoans(state.loans, state.snapshots),
-      selectPaydownData(
-        selectPayoffLoans(state.loans, state.snapshots),
-        state.paydownMethod,
-        state.snowball,
-        state.extraPayments,
-        state.snowballAdjustments
-      )
-    ),
-    accountProjectionRows: () => selectAccountProjectionRows(
-      selectPayoffLoans(state.loans, state.snapshots),
-      selectPaydownData(
-        selectPayoffLoans(state.loans, state.snapshots),
-        state.paydownMethod,
-        state.snowball,
-        state.extraPayments,
-        state.snowballAdjustments
-      )
-    ),
-    paydownComparison: () => selectPaydownComparison(
-      selectPaydownData(
-        selectPayoffLoans(state.loans, state.snapshots),
-        state.paydownMethod,
-        state.snowball,
-        state.extraPayments,
-        state.snowballAdjustments
-      ),
-      selectBaselinePaydownData(
-        selectPayoffLoans(state.loans, state.snapshots)
-      )
-    )
+    payoffLoans,
+    paydownData,
+    baselinePaydownData,
+    payoffTimeline: () => selectPayoffTimeline(payoffLoans(), paydownData()),
+    accountProjectionRows: () => {
+      const asOfDate = getAsOfDate();
+      return selectAccountProjectionRows(payoffLoans(), paydownData(asOfDate), asOfDate);
+    },
+    paydownComparison: () => {
+      const asOfDate = getAsOfDate();
+      return selectPaydownComparison(paydownData(asOfDate), baselinePaydownData(asOfDate), asOfDate);
+    }
   };
 }
 

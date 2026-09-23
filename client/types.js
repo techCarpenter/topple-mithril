@@ -17,7 +17,7 @@
  * @property {number} id
  * @property {number} userId
  * @property {number} accountId
- * @property {number} date
+ * @property {number | Date} date
  * @property {number} balance
  *
  * @typedef PaymentDetail
@@ -52,6 +52,8 @@
  * @property {string} paydownMethod
  * @property {number} startingSnowball
  * @property {number} finalSnowball
+ * @property {string[]} [errors]
+ * @property {boolean} [alreadyPaidOff]
  *
  * @typedef ExtraPayment
  * @property {number} id
