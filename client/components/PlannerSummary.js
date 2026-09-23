@@ -95,40 +95,6 @@ const PlannerSummary = {
         m("section.panel", [
           m("div.panel-header.panel-header-tight", [
             m("div", [
-              m("p.eyebrow", "Scenario"),
-              m("h2.section-title", "Adjust the plan")
-            ]),
-            m("p.section-copy", "Change the payoff method or extra monthly amount to refresh the projection.")
-          ]),
-          m("div.control-grid", [
-            m("label.form-field", [
-              m("span", "Paydown method"),
-              m("select", {
-                value: state.paydownMethod,
-                onchange: (event) => actions.setPaydownMethod(event.target.value)
-              }, Object.entries(METHOD_LABELS).map(([value, label]) => (
-                m("option", { key: value, value }, label)
-              )))
-            ]),
-            m("label.form-field", [
-              m("span", "Monthly extra snowball"),
-              m("input", {
-                id: "snowball",
-                type: "number",
-                min: "0",
-                step: "10",
-                value: state.snowball,
-                oninput: (event) => actions.setSnowball(parseFloat(event.target.value))
-              })
-            ])
-          ]),
-          m("p.inline-helper", payoffLoans.length === 0
-            ? "Add one account and one snapshot to start the planner."
-            : "Saved extra payments and snowball adjustments are included automatically.")
-        ]),
-        m("section.panel", [
-          m("div.panel-header.panel-header-tight", [
-            m("div", [
               m("p.eyebrow", "Snapshot"),
               m("h2.section-title", "Today's outlook")
             ]),
